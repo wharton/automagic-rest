@@ -11,7 +11,8 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     install_requires=[
-        'djangorestframework>=3.7.7',
+        'djangorestframework>=3.7.7,<3.8',
+        'inflection==0.3.1',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

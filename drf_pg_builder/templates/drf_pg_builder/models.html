@@ -1,0 +1,11 @@
+from django.db import models
+
+{% for table_key, table_value in tables.items %}
+class {{ table_key }}_model(models.Model):
+{% for column in table_value %}    {{ column }}
+{% endfor %}
+    class Meta:
+        managed = False
+        db_table = '{{ schema_name }}\".\"{{ table.name }}'
+
+{% endfor %}

@@ -1,0 +1,12 @@
+from django.urls import include, path
+
+from drf_pg_builder.routers import PermittedRouter
+from drf_pg_builder.views import GenericViewSet
+
+router = PermittedRouter()
+{% for route in routes %}
+router.register(r"{{ route }}", GenericViewSet, base_name="{{ route }}"){% endfor %}
+
+urlpatterns = [
+    path('', include(router.urls)),
+]

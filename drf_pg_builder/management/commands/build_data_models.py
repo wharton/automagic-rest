@@ -1,14 +1,12 @@
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
+
 from glob import glob
 from os import remove
 from re import sub
 
 from django.core.management.base import BaseCommand
 from django.db import connections
-
-from inflection import camelize
-
-SCHEMA_OWNER = 'wrdsadmn'
+from django.template.loader import render_to_string
 
 # Map PostgreSQL column types to Django ORM field type
 # Please note: "blank=True, null=True" must be typed
@@ -77,6 +75,21 @@ RESERVED_WORDS.append(
 )
 
 
+def fetch_result_with_blank_row(cursor):
+    """
+    Gets all the rows, and appends a blank row so that the final
+    model and column are written in the loop.
+    """
+    results = cursor.fetchall()
+    results.append(
+        ('__FALSY__', '__FALSY__', '__FALSY__', 'integer', '__FALSY__')
+    )
+    desc = cursor.description
+    nt_result = namedtuple('Result', [col[0] for col in desc])
+
+    return [nt_result(*row) for row in results]
+
+
 class Command(BaseCommand):
     """
     This command will create Django models by introspecting the PostgreSQL data.
@@ -93,9 +106,9 @@ class Command(BaseCommand):
             help='The database to use. Defaults to the "pgdata" database.'
         )
         parser.add_argument(
-            '--product',
+            '--schema',
             action='store',
-            dest='product',
+            dest='schema',
             default="",
             help='A specific product to remodel, by schema name from PostgreSQL. Omit for all.'
         )
@@ -105,6 +118,13 @@ class Command(BaseCommand):
             dest='owner',
             default="wrdsadmn",
             help='Select schemata from this PostgreSQL owner user. Defaults to the "wrdsadmn" owner.'
+        )
+        parser.add_argument(
+            '--path',
+            action='store',
+            dest='path',
+            default="data",
+            help='The path where to place the model and serializer files.',
         )
 
     def connect_cursor(self, options, db=None):
@@ -121,109 +141,71 @@ class Command(BaseCommand):
 
         return cursor
 
+    def get_allowed_schemata(self, options, cursor):
+        """
+        Method which returns a list of schemata allows to be built into endpoints.
+
+        If None, allows all schemata to be built.
+        """
+        return None
+
+    def get_serializer(self):
+        """
+        Returns the path to the serializer to be used.
+        """
+        return "rest_framework.serializers.ModelSerializer"
+
+    def sanitize_sql_identifier(self, identifier):
+        """
+        PG schemata should only contain alphanumerics and underscore.
+        """
+        return sub('[^0-9a-zA-Z]+', '_', identifier)
+
+    def metadata_sql(self, schema_sql, allowed_schemata_sql):
+        return f"""
+            SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length
+
+            FROM information_schema.schemata s
+
+            INNER JOIN information_schema.columns c
+            ON s.schema_name = c.table_schema
+
+            WHERE s.schema_owner = %(schema_owner)s
+            AND c.table_name NOT LIKE '%%chars'
+            {schema_sql}
+            {allowed_schemata_sql}
+
+            ORDER BY s.schema_name, c.table_name, c.column_name
+        """
+
     def get_endpoint_metadata(self, options, cursor):
-        product = options.get('product')
+        schema = options.get('schema')
         owner = options.get('owner')
 
-        # Get the list of products from SQL Server
-        ms_cursor = self.connect_cursor(options, 'mssqlwrds')
-        res = ms_cursor.execute(
-            """
-            SELECT REPLACE(product, '.', '_') AS schema_name FROM wrds_products ORDER BY product
-            """
-        )
-        rows = res.fetchall()
+        allowed_schemata = self.get_allowed_schemata(options, cursor)
 
-        wrds_product_list = []
+        allowed_schemata_sql = ""
+        if allowed_schemata:
+            allowed_schemata_sql = f"""AND s.schema_name IN ('{"', '".join(allowed_schemata)}')"""
 
-        for row in rows:
-            wrds_product_list.append(f"'{row[0]}'")
+        schema_sql = ""
+        if len(schema):
+            schema = self.sanitize_sql_identifier(schema)
 
-        product_sql = ""
-        if len(product):
-            # PG schemata should only contain alphanumerics and underscore
-            product = sub('[^0-9a-zA-Z]+', '_', product)
-            if product in wrds_product_list:
-                product_sql = f"AND s.schema_name = '{product}'"
+            if schema in allowed_schemata:
+                schema_sql = f"AND s.schema_name = '{schema}'"
             else:
                 print("WARNING! The product you specified isn't in the WRDS product list. Running all endpoints.")
 
-            sql = f"""
-                SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length
+        sql = self.metadata_sql(schema_sql, allowed_schemata_sql)
+        cursor.execute(
+            sql,
+            {
+                "schema_owner": owner,
+            }
+        )
 
-                FROM information_schema.schemata s
-
-                INNER JOIN information_schema.columns c
-                ON s.schema_name = c.table_schema
-
-                WHERE s.schema_owner = %(schema_owner)s
-                AND s.schema_name = %(schema_name)s
-                {product_sql}
-                AND s.schema_name IN ({', '.join(wrds_product_list)})
-                AND c.table_name NOT LIKE '%%chars'
-
-                ORDER BY s.schema_name, c.table_name, c.column_name
-            """
-
-            cursor.execute(
-                sql,
-                {
-                    "schema_owner": owner,
-                    "schema_name": product,
-                }
-            )
-        else:
-            sql = f"""
-                SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length
-
-                FROM information_schema.schemata s
-
-                INNER JOIN information_schema.columns c
-                ON s.schema_name = c.table_schema
-
-                WHERE s.schema_owner = %(schema_owner)s
-                AND s.schema_name IN ({', '.join(wrds_product_list)})
-                AND c.table_name NOT LIKE '%%chars'
-
-                ORDER BY s.schema_name, c.table_name, c.column_name
-            """
-
-            cursor.execute(
-                sql,
-                {
-                    "schema_owner": owner,
-                }
-            )
-
-        rows = cursor.fetchall()
-
-        return rows
-
-    def get_friendly_schemata(self, options, cursor):
-        product = options.get('product')
-
-        if len(product):
-            cursor.execute(
-                """
-                SELECT DISTINCT frname AS schema_name
-                FROM wrds_lib_internal.friendly_schema_mapping
-                WHERE frname = %(schema_name)s
-                ORDER BY schema_name
-                """,
-                {
-                    "schema_name": product,
-                }
-            )
-        else:
-            cursor.execute(
-                """
-                SELECT DISTINCT frname AS schema_name
-                FROM wrds_lib_internal.friendly_schema_mapping
-                ORDER BY schema_name
-                """
-            )
-
-        rows = cursor.fetchall()
+        rows = fetch_result_with_blank_row(cursor)
 
         return rows
 
@@ -237,178 +219,98 @@ class Command(BaseCommand):
                 if not f.endswith('__.py'):
                     remove(f)
 
+    def write_schema_files(self, root_path, context):
+        """
+        Write out the current schema model and serializer.
+        """
+        for output_file in ("models", "serializers"):
+            with open(
+                f"""{root_path}/{output_file}/{context["schema_name"]}.py""",
+                "w",
+            ) as f:
+                output = render_to_string(f"drf_pg_builder/{output_file}.html", context)
+                f.write(output)
+
     def handle(self, *args, **options):
+        # model_count = 0
+
+        root_path = options.get('path')
+
+        if len(options.get("schema", "")) == 0:
+            self.delete_generated_files(root_path)
+
+        cursor = self.connect_cursor(options)
+
+        # Get the metadata given the options from PostgreSQL
+        print("Getting the metadata from PostgreSQL...")
+        schemata_data = self.get_endpoint_metadata(options, cursor)
+
+        # Get the serializer from the path
+        serializer_data = self.get_serializer().split(".")
+
+        # Initial context. Set up so it doesn't try to write on the first
+        # pass through
+        context = {
+            "schema_name": None,
+            "serializer": serializer_data.pop(),
+            "serializer_path": ".".join(serializer_data),
+            "routes": [],
+        }
         model_count = 0
 
-        for root_path in ('data', 'data_full',):
-            if len(options.get('product')) == 0:
-                self.delete_generated_files(root_path)
+        for row in schemata_data:
+            if context["schema_name"] != row.schema_name:
+                # We're on a new schema. Write the previous, unless it
+                # is our first time through.
+                if context["schema_name"]:
+                    self.write_schema_files(root_path, context)
 
-            cursor = self.connect_cursor(options)
+                # Set the new schema name, clear the tables and columns
+                if row.schema_name != "__FALSY__":
+                    print(f"*** Working on schema: {row.schema_name} ***")
+                context["schema_name"] = row.schema_name
+                context["tables"] = {}
 
-            if root_path == 'data':
-                schema_rows = self.get_friendly_schemata(options, cursor)
-            elif root_path == 'data_full':
-                schema_rows = self.get_schemata(options, cursor)
-            else:
-                raise ValueError(
-                    'Invalid value for "root_path" set in build script: "{}"'.format(
-                        root_path,
-                    )
-                )
-            print(
-                'COUNT {}: {}'.format(
-                    root_path,
-                    len(schema_rows),
-                )
-            )
-
-            url_import_dict = OrderedDict()
-
-            for schema_row in schema_rows:
-                model_file_content = "from django.db import models\n"
-
-                serializer_file_content = "from home.serializers import DynamicFieldsModelSerializer\n\n"
-                table_import_list = []
-                serializer_content = ''
-
-                schema_name = schema_row[0]
-                url_import_dict[schema_name] = []
-
-                print('*** Working on product: {} ***'.format(schema_name))
-
-                table_rows = self.get_tables(cursor, schema_name)
-                for table_row in table_rows:
-                    table_name = table_row[0]
-                    model_count += 1
-                    print(
-                        'Model {}: {}'.format(
-                            model_count,
-                            table_name,
-                        )
-                    )
-                    table_name_camelize = camelize('{0}_{1}'.format(schema_name, table_name))
-                    model_content = 'class {}Model(models.Model):\n'.format(table_name_camelize)
-
-                    # Keep track of the Model names we'll need to insert into Serializers and Views
-                    table_import_list.append(table_name_camelize)
-
-                    # Keep track of the elements we'll need to do imports and registers in the URLs file
-                    url_import_dict[schema_name].append((table_name, table_name_camelize))
-
-                    # Blank list for keeping track of fields for the Serializer
-                    serializer_field_list = []
-
-                    # Track is a field has been set as primary key
-                    primary_key_has_been_set = 0
-
-                    column_rows = self.get_columns(cursor, schema_name, table_name)
-                    for column_row in column_rows:
-                        # Check to see if column length is populated;
-                        # If it isn't, set to unlimited max_length
-                        """
-                        if column_row[3] is None:
-                            max_length = "-1"
-                        else:
-                            max_length = column_row[3]
-                        """
-
-                        # If the column name is a Python reserved word, append an underscore
-                        # to follow the Python convention
-                        if column_row[1] in RESERVED_WORDS or column_row[1].endswith('_'):
-                            if column_row[1].endswith('_'):
-                                under_score = ''
-                            else:
-                                under_score = '_'
-                            column_name = '{}{}var'.format(
-                                column_row[1],
-                                under_score,
-                            )
-                            db_column = ", db_column='{}'".format(column_row[1])
-                        else:
-                            column_name = column_row[1]
-                            db_column = ''
-
-                        if(primary_key_has_been_set):
-                            field_map = COLUMN_FIELD_MAP[column_row[2]].format('', db_column)
-                        else:
-                            # We'll make the first column the primary key, since once is required in the Django ORM
-                            # and this is read-only. Primary keys can not be set to NULL in Django.
-                            field_map = COLUMN_FIELD_MAP[column_row[2]].format('primary_key=True', db_column).replace('blank=True, null=True', '')
-                            primary_key_has_been_set = 1
-
-                        model_content += '    {} = models.{}\n'.format(
-                            column_name,
-                            field_map,
-                        )
-                        serializer_field_list.append("'{}'".format(column_row[1]))
-
-                    # Append the Model file content with the information for this table from PostgreSQL
-                    model_file_content += f"""
-
-{model_content}
-    class Meta:
-        managed = False
-        db_table = '{schema_name}\\".\\"{table_name}'
-"""
-
-                    # Append the Serializer for this Model to be injected into the Serialize file
-                    serializer_content += f"""
-class {table_name_camelize}Serializer(DynamicFieldsModelSerializer):
-    class Meta:
-        model = {table_name_camelize}Model
-        fields = '__all__'
-
-"""
-
-                # Append a blank field to the table_import_list so formatting
-                # works correctly and there is a final comma.
-                table_import_list.append('')
-
-                serializer_file_content += """from ..models.{0} import (
-    {1}
-)
-
-{2}""".format(
-                    schema_name,
-                    'Model,\n    '.join(table_import_list),
-                    serializer_content,
+            if row.table_name not in context["tables"]:
+                model_count += 1
+                if row.schema_name != "__FALSY__":
+                    print(f"{model_count}: {row.table_name}")
+                context["tables"][row.table_name] = []
+                primary_key_has_been_set = False
+                context["routes"].append(
+                    f"""{row.schema_name}.{row.table_name}"""
                 )
 
-                with open(f'{root_path}/models/{schema_name}.py', 'w') as f:
-                    f.write(model_file_content)
-                with open(f'{root_path}/serializers/{schema_name}.py', 'w') as f:
-                    f.write(serializer_file_content)
-
-            # Build urls.py file for all datasets
-            url_file_register = ''
-
-            for schema, table_items in url_import_dict.items():
-                if table_items:
-                    for table_item in table_items:
-                        url_file_register += "router.register(r'{0}.{1}', GenericViewSet, base_name='{0}-{1}')\n".format(
-                            schema,
-                            table_item[0],
-                        )
+            # If the column name is a Python reserved word, append an underscore
+            # to follow the Python convention
+            if row.column_name in RESERVED_WORDS or row.column_name.endswith('_'):
+                if row.column_name.endswith('_'):
+                    under_score = ''
                 else:
-                    print('WARNING: The schema "{}" has no tables.'.format(schema))
+                    under_score = '_'
+                column_name = '{}{}var'.format(
+                    row.column_name,
+                    under_score,
+                )
+                db_column = ", db_column='{}'".format(row.column_name)
+            else:
+                column_name = row.column_name
+                db_column = ''
 
-            url_file_content = """from django.urls import include, re_path
+            if(primary_key_has_been_set):
+                field_map = COLUMN_FIELD_MAP[row.data_type].format('', db_column)
+            else:
+                # We'll make the first column the primary key, since once is required in the Django ORM
+                # and this is read-only. Primary keys can not be set to NULL in Django.
+                field_map = COLUMN_FIELD_MAP[row.data_type].format('primary_key=True', db_column).replace('blank=True, null=True', '')
+                primary_key_has_been_set = True
 
-from home.routers import PermittedRouter
-
-from {}.views import GenericViewSet
-
-router = PermittedRouter()
-{}
-
-urlpatterns = [
-    re_path(r'^', include(router.urls)),
-]
-""".format(
-                root_path,
-                url_file_register,
+            context["tables"][row.table_name].append(
+                f"""{column_name} = models.{field_map}"""
             )
 
-            with open('{}/urls.py'.format(root_path), 'w') as f:
-                f.write(url_file_content)
+        # Pop off the final false row, and write the URLs file.
+        context["routes"].pop()
+        with open(f"{root_path}/urls.py", "w") as f:
+            output = render_to_string(f"drf_pg_builder/urls.html", context)
+            f.write(output)

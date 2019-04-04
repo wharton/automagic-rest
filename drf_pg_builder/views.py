@@ -17,7 +17,7 @@ def split_basename(basename):
     """
     Splits a base name into schema and table names.
     """
-    parts = basename.split('-')
+    parts = basename.split('.')
     schema_lower = parts[0].lower()
     table_lower = parts[1].lower()
 
