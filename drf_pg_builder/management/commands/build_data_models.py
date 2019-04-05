@@ -1,7 +1,7 @@
-from collections import namedtuple, OrderedDict
+from collections import namedtuple
 
 from glob import glob
-from os import remove
+import os
 from re import sub
 
 from django.core.management.base import BaseCommand
@@ -141,13 +141,8 @@ class Command(BaseCommand):
 
         return cursor
 
-    def get_allowed_schemata(self, options, cursor):
-        """
-        Method which returns a list of schemata allows to be built into endpoints.
-
-        If None, allows all schemata to be built.
-        """
-        return None
+    def get_path(self, options):
+        return options.get('path')
 
     def get_serializer(self):
         """
@@ -178,15 +173,30 @@ class Command(BaseCommand):
             ORDER BY s.schema_name, c.table_name, c.column_name
         """
 
+    def get_allowed_schemata(self, options, cursor):
+        """
+        Method which returns a list of schemata allows to be built into endpoints.
+
+        If None, allows all schemata to be built.
+        """
+        return None
+
+    def get_allowed_schemata_sql(self, allowed_schemata):
+        """
+        Transforms the list of allowed schemata into SQL for the query.
+        """
+        allowed_schemata_sql = ""
+        if allowed_schemata:
+            allowed_schemata_sql = f"""AND s.schema_name IN ('{"', '".join(allowed_schemata)}')"""
+
+        return allowed_schemata_sql
+
     def get_endpoint_metadata(self, options, cursor):
         schema = options.get('schema')
         owner = options.get('owner')
 
         allowed_schemata = self.get_allowed_schemata(options, cursor)
-
-        allowed_schemata_sql = ""
-        if allowed_schemata:
-            allowed_schemata_sql = f"""AND s.schema_name IN ('{"', '".join(allowed_schemata)}')"""
+        allowed_schemata_sql = self.get_allowed_schemata_sql(allowed_schemata)
 
         schema_sql = ""
         if len(schema):
@@ -217,7 +227,7 @@ class Command(BaseCommand):
             files_to_delete = glob(f'{root_path}/{path}/*.py')
             for f in files_to_delete:
                 if not f.endswith('__.py'):
-                    remove(f)
+                    os.remove(f)
 
     def write_schema_files(self, root_path, context):
         """
@@ -232,9 +242,10 @@ class Command(BaseCommand):
                 f.write(output)
 
     def handle(self, *args, **options):
-        # model_count = 0
-
-        root_path = options.get('path')
+        # Get the provided root path and create directories
+        root_path = self.get_path(options)
+        os.makedirs(root_path + os.sep + "models", exist_ok=True)
+        os.makedirs(root_path + os.sep + "serializers", exist_ok=True)
 
         if len(options.get("schema", "")) == 0:
             self.delete_generated_files(root_path)

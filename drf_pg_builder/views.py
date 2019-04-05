@@ -3,7 +3,6 @@ from importlib import import_module
 from django.db import connections
 
 from drf_renderer_xlsx.mixins import XLSXFileMixin
-from inflection import camelize
 from pg_permissions import check_permission
 from rest_framework.permissions import BasePermission
 from rest_framework.viewsets import ReadOnlyModelViewSet
@@ -18,10 +17,10 @@ def split_basename(basename):
     Splits a base name into schema and table names.
     """
     parts = basename.split('.')
-    schema_lower = parts[0].lower()
-    table_lower = parts[1].lower()
+    schema_name = parts[0].lower()
+    table_name = parts[1].lower()
 
-    return schema_lower, table_lower
+    return schema_name, table_name
 
 
 class GenericPermission(BasePermission):
@@ -31,12 +30,12 @@ class GenericPermission(BasePermission):
     """
 
     def has_permission(self, request, view):
-        schema_lower, table_lower = split_basename(view.basename)
+        schema_name, table_name = split_basename(view.basename)
 
         return check_permission(
             request.user.username,
-            schema_lower,
-            table_lower,
+            schema_name,
+            table_name,
         )
 
 
@@ -62,16 +61,14 @@ class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        schema_lower, table_lower = split_basename(self.basename)
-        schema_camel = camelize(schema_lower)
-        table_camel = camelize(table_lower)
-        api_model = getattr(import_module(f'{self.app_prefix}.models.{schema_lower}'), f'{schema_camel}{table_camel}Model')
-        api_serializer = getattr(import_module(f'{self.app_prefix}.serializers.{schema_lower}'), f'{schema_camel}{table_camel}Serializer')
+        schema_name, table_name = split_basename(self.basename)
+        api_model = getattr(import_module(f'{self.app_prefix}.models.{schema_name}'), f'{table_name}_model')
+        api_serializer = getattr(import_module(f'{self.app_prefix}.serializers.{schema_name}'), f'{table_name}_serializer')
         api_permission = GenericPermission
 
         # Grab the estimated count from the query plan; if its a large table,
         # use the count estimate for Pagination instead of an exact count.
-        table_estimate_count = estimate_count(f'SELECT * FROM {schema_lower}.{table_lower}')
+        table_estimate_count = estimate_count(f'SELECT * FROM {schema_name}.{table_name}')
         if table_estimate_count > 1000000:
             self.pagination_class = CountEstimatePagination
 
@@ -84,7 +81,7 @@ class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
 
         # Add any columns indexed in the PostgreSQL database to be
         # filterable columns in the API
-        index_columns = self.get_indexes(schema_lower, table_lower)
+        index_columns = self.get_indexes(schema_name, table_name)
 
         # If any columns are indexed, add the appropriate filter backends
         # and set up a dictionary of filter fields
