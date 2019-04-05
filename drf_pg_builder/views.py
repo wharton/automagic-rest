@@ -3,8 +3,6 @@ from importlib import import_module
 from django.db import connections
 
 from drf_renderer_xlsx.mixins import XLSXFileMixin
-from pg_permissions import check_permission
-from rest_framework.permissions import BasePermission
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework_filters.backends import (
@@ -24,18 +22,6 @@ def split_basename(basename):
     table_name = parts[1].lower()
 
     return schema_name, table_name
-
-
-class GenericPermission(BasePermission):
-    """
-    Generic class which checks permissions on the schema
-    and table for the endpoint.
-    """
-
-    def has_permission(self, request, view):
-        schema_name, table_name = split_basename(view.basename)
-
-        return check_permission(request.user.username, schema_name, table_name)
 
 
 class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
@@ -69,7 +55,7 @@ class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
             import_module(f"{self.app_prefix}.serializers.{schema_name}"),
             f"{table_name}_serializer",
         )
-        api_permission = GenericPermission
+        api_permission = self.get_permission()
 
         # Grab the estimated count from the query plan; if its a large table,
         # use the count estimate for Pagination instead of an exact count.
@@ -81,7 +67,11 @@ class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
 
         self.queryset = api_model.objects.all()
         self.serializer_class = api_serializer
-        self.permission_classes = (api_permission,)
+
+        # Only override permissions if provided.
+        if api_permission:
+            self.permission_classes = (api_permission,)
+
         self.filter_backends = (OrderingFilter, SearchFilter)
         self.ordering_fields = "__all__"
         self.search_fields = []
@@ -130,6 +120,9 @@ class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
                     self.filter_fields[field.name] = ["exact", "lt", "lte", "gt", "gte"]
 
         self.search_fields = tuple(self.search_fields)
+
+    def get_permission(self):
+        return None
 
     def get_indexes(self, schema_name, table_name):
         """

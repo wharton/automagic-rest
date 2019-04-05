@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from drf_pg_builder.routers import PermittedRouter
-from drf_pg_builder.views import GenericViewSet
+from {{ view_path }} import {{ view }}
 
 router = PermittedRouter()
 {% for route in routes %}

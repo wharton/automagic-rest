@@ -150,6 +150,12 @@ class Command(BaseCommand):
         """
         return "rest_framework.serializers.ModelSerializer"
 
+    def get_view(self):
+        """
+        Returns the path to the serializer to be used.
+        """
+        return "drf_pg_builder.views.GenericViewSet"
+
     def sanitize_sql_identifier(self, identifier):
         """
         PG schemata should only contain alphanumerics and underscore.
@@ -256,8 +262,9 @@ class Command(BaseCommand):
         print("Getting the metadata from PostgreSQL...")
         schemata_data = self.get_endpoint_metadata(options, cursor)
 
-        # Get the serializer from the path
+        # Get the serializer and view data from the full path
         serializer_data = self.get_serializer().split(".")
+        view_data = self.get_view().split(".")
 
         # Initial context. Set up so it doesn't try to write on the first
         # pass through
@@ -265,6 +272,8 @@ class Command(BaseCommand):
             "schema_name": None,
             "serializer": serializer_data.pop(),
             "serializer_path": ".".join(serializer_data),
+            "view": view_data.pop(),
+            "view_path": ".".join(view_data),
             "routes": [],
         }
         model_count = 0
