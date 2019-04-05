@@ -6,6 +6,6 @@ class {{ table_key }}_model(models.Model):
 {% endfor %}
     class Meta:
         managed = False
-        db_table = '{{ schema_name }}\".\"{{ table_name }}'
+        db_table = '{{ schema_name }}\".\"{{ table_key }}'
 
 {% endfor %}
