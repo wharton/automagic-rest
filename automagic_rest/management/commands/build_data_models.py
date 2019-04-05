@@ -82,7 +82,7 @@ def fetch_result_with_blank_row(cursor):
     """
     results = cursor.fetchall()
     results.append(
-        ('__FALSY__', '__FALSY__', '__FALSY__', 'integer', '__FALSY__')
+        ('__BLANK__', '__BLANK__', '__BLANK__', 'integer', '__BLANK__')
     )
     desc = cursor.description
     nt_result = namedtuple('Result', [col[0] for col in desc])
@@ -154,7 +154,7 @@ class Command(BaseCommand):
         """
         Returns the path to the serializer to be used.
         """
-        return "drf_pg_builder.views.GenericViewSet"
+        return "automagic_rest.views.GenericViewSet"
 
     def sanitize_sql_identifier(self, identifier):
         """
@@ -244,7 +244,7 @@ class Command(BaseCommand):
                 f"""{root_path}/{output_file}/{context["schema_name"]}.py""",
                 "w",
             ) as f:
-                output = render_to_string(f"drf_pg_builder/{output_file}.html", context)
+                output = render_to_string(f"automagic_rest/{output_file}.html", context)
                 f.write(output)
 
     def handle(self, *args, **options):
@@ -286,14 +286,14 @@ class Command(BaseCommand):
                     self.write_schema_files(root_path, context)
 
                 # Set the new schema name, clear the tables and columns
-                if row.schema_name != "__FALSY__":
+                if row.schema_name != "__BLANK__":
                     print(f"*** Working on schema: {row.schema_name} ***")
                 context["schema_name"] = row.schema_name
                 context["tables"] = {}
 
             if row.table_name not in context["tables"]:
                 model_count += 1
-                if row.schema_name != "__FALSY__":
+                if row.schema_name != "__BLANK__":
                     print(f"{model_count}: {row.table_name}")
                 context["tables"][row.table_name] = []
                 primary_key_has_been_set = False
@@ -332,5 +332,5 @@ class Command(BaseCommand):
         # Pop off the final false row, and write the URLs file.
         context["routes"].pop()
         with open(f"{root_path}/urls.py", "w") as f:
-            output = render_to_string(f"drf_pg_builder/urls.html", context)
+            output = render_to_string(f"automagic_rest/urls.html", context)
             f.write(output)

@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="drf-pg-builder",
-    version="0.1.0",
-    description="Django REST Framework PostgreSQL Builder",
+    name="automagic-rest",
+    version="0.1.0.dev0",
+    description="Automagic REST: Django REST Framework PostgreSQL Builder",
     long_description="",
     author="Timothy Allen",
     author_email="tallen@wharton.upenn.edu",
-    url="https://github.com/wharton/drf-pg-builder",
+    url="https://github.com/wharton/automagic-rest",
     include_package_data=True,
     packages=find_packages(),
     zip_safe=False,

@@ -2,7 +2,6 @@ from importlib import import_module
 
 from django.db import connections
 
-from drf_renderer_xlsx.mixins import XLSXFileMixin
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework_filters.backends import (
@@ -24,7 +23,7 @@ def split_basename(basename):
     return schema_name, table_name
 
 
-class GenericViewSet(XLSXFileMixin, ReadOnlyModelViewSet):
+class GenericViewSet(ReadOnlyModelViewSet):
     """
     """
 
