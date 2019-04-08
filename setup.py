@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="automagic-rest",
-    version="0.1.0.dev0",
+    version="0.1.0.dev1",
     description="Automagic REST: Django REST Framework PostgreSQL Builder",
     long_description="",
     author="Timothy Allen",
@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "djangorestframework>=3.7.7",
-        "djangorestframework-filters==1.0.0.dev1",
+        "djangorestframework-filters==1.0.0.dev0",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
