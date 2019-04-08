@@ -34,4 +34,47 @@ Methods are provided which can be overridden to customize the endpoint.
 
 `metadata_sql`: this method returns the SQL used to pull the metadata from PostgreSQL to build the endpoints.
 
+To customize the build command, here is an example:
 
+```python
+# my_app/home/management/commands/my_build_data_models.py
+from automagic_rest.management.commands import build_data_models
+
+
+class Command(build_data_models.Command):
+    """
+    My specific overrides for DRF PG Builder command.
+    """
+
+    def get_db(self, options):
+        """
+        Returns our customized Django DB name.
+        """
+        return "my_data"
+
+    def get_owner(self, options):
+        """
+        Returns our customized schema owner.
+        """
+        return "my_user"
+
+    def get_root_python_path(self, options):
+        """
+        Returns our customized build path.
+        """
+        return "my_data_path"
+
+    def get_view(self):
+        """
+        Returns our customized view path.
+        """
+        return "my_app.views.MyDataViewSet"
+
+    def get_allowed_schemata(self, options, cursor):
+        """
+        Get the list of products from SQL Server
+        """
+        allowed_schemata = ['my_data', 'public_data']
+
+        return allowed_schemata
+```
