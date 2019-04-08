@@ -277,6 +277,7 @@ class Command(BaseCommand):
         # Initial context. Set up so it doesn't try to write on the first
         # pass through
         context = {
+            "db_name": self.get_db(options),
             "schema_name": None,
             "root_python_path": root_python_path,
             "serializer": serializer_data.pop(),

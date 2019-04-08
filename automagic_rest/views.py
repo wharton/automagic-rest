@@ -45,7 +45,9 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        python_path_name, schema_name, table_name = split_basename(self.basename)
+        db_name, python_path_name, schema_name, table_name = split_basename(
+            self.basename,
+        )
         api_model = getattr(
             import_module(f"{python_path_name}.models.{schema_name}"),
             f"{table_name}_model",
@@ -77,7 +79,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         # Add any columns indexed in the PostgreSQL database to be
         # filterable columns in the API
-        index_columns = self.get_indexes(schema_name, table_name)
+        index_columns = self.get_indexes(db_name, schema_name, table_name)
 
         # If any columns are indexed, add the appropriate filter backends
         # and set up a dictionary of filter fields
@@ -135,13 +137,13 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         return 999_999
 
-    def get_indexes(self, schema_name, table_name):
+    def get_indexes(self, db_name, schema_name, table_name):
         """
         Return a list of unique columns that are part of an index on a table
         by providing schema name and table name.
         """
 
-        cursor = connections["pgdata"].cursor()
+        cursor = connections[db_name].cursor()
 
         cursor.execute(
             self.index_sql, {"table_schema": schema_name, "table_name": table_name}
