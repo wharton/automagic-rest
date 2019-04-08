@@ -84,3 +84,21 @@ class Command(build_data_models.Command):
 
         return allowed_schemata
 ```
+
+### class views.GenericViewSet
+
+The view has several methods and attributes which can be overridden as well.
+
+#### Attributes
+
+`index_sql`: this attribute defines SQL to return the first column in each index for the current table for the Model. These will be used to dynamically make all indexed fields searchable and filterable.
+
+#### Methods
+
+`get_permission` (default: `None`): returns a permission class to use for the endpoint. When left at the default of `None`, uses the default permission class set by Django REST Framework.
+
+`get_estimate_count_limit` (default: `999_999`): to prevent long-running `SELECT COUNT(*)` queries, the view estimates the number of rows in the table by examing the query plan. If greater than this number, it will estimate pagination counts for vastly improved speed.
+
+### After the Files Are Built
+
+After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
