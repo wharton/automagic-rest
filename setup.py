@@ -13,7 +13,7 @@ setup(
     zip_safe=False,
     install_requires=[
         "djangorestframework>=3.7.7",
-        "djangorestframework-filters==1.0.0.dev0",
+        "djangorestframework-filters==1.0.0.dev1",
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
