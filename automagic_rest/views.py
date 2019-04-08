@@ -61,7 +61,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         table_estimate_count = estimate_count(
             f"SELECT * FROM {schema_name}.{table_name}"
         )
-        if table_estimate_count > 1000000:
+        if table_estimate_count > self.get_estimate_count_limit():
             self.pagination_class = CountEstimatePagination
 
         self.queryset = api_model.objects.all()
@@ -121,7 +121,19 @@ class GenericViewSet(ReadOnlyModelViewSet):
         self.search_fields = tuple(self.search_fields)
 
     def get_permission(self):
+        """
+        If overridden, this method must provide a valid Django REST Framework
+        permission class to use in the view.
+        """
         return None
+
+    def get_estimate_count_limit(self):
+        """
+        If overridden, this method returns the number of rows in a query planner
+        estimate count which will cause estimated row counts to be used instead
+        of the (much) slowed `SELECT COUNT(*)` method. We'll start at one million.
+        """
+        return 999_999
 
     def get_indexes(self, schema_name, table_name):
         """
