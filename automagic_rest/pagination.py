@@ -15,7 +15,7 @@ def parse_explain(explain_string):
     return int(re.search("rows=([0-9]+) ", explain_string).group(1))
 
 
-def estimate_count(query):
+def estimate_count(db_name, query):
     """
     This will give us a close estimate count of the number of rows in the table
     by using the execution plan. This returns the estimated number of rows by
@@ -24,7 +24,7 @@ def estimate_count(query):
     See: https://wiki.postgresql.org/wiki/Count_estimate
     """
 
-    cursor = connections["pgdata"].cursor()
+    cursor = connections[db_name].cursor()
     cursor.execute(f"EXPLAIN {query}")
     rows = cursor.fetchall()
 

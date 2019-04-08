@@ -17,11 +17,12 @@ def split_basename(basename):
     Splits a base name into schema and table names.
     """
     parts = basename.split(".")
-    python_path_name = parts[0].lower()
-    schema_name = parts[1].lower()
-    table_name = parts[2].lower()
+    db_name = parts[0]
+    python_path_name = parts[1]
+    schema_name = parts[2]
+    table_name = parts[3]
 
-    return python_path_name, schema_name, table_name
+    return db_name, python_path_name, schema_name, table_name
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
@@ -45,7 +46,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        db_name, python_path_name, schema_name, table_name = split_basename(
+        self.db_name, python_path_name, schema_name, table_name = split_basename(
             self.basename,
         )
         api_model = getattr(
@@ -61,6 +62,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         # Grab the estimated count from the query plan; if its a large table,
         # use the count estimate for Pagination instead of an exact count.
         table_estimate_count = estimate_count(
+            self.db_name,
             f"SELECT * FROM {schema_name}.{table_name}"
         )
         if table_estimate_count > self.get_estimate_count_limit():
@@ -79,7 +81,11 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         # Add any columns indexed in the PostgreSQL database to be
         # filterable columns in the API
-        index_columns = self.get_indexes(db_name, schema_name, table_name)
+        index_columns = self.get_indexes(
+            self.db_name,
+            schema_name,
+            table_name,
+        )
 
         # If any columns are indexed, add the appropriate filter backends
         # and set up a dictionary of filter fields
@@ -121,6 +127,13 @@ class GenericViewSet(ReadOnlyModelViewSet):
                     self.filter_fields[field.name] = ["exact", "lt", "lte", "gt", "gte"]
 
         self.search_fields = tuple(self.search_fields)
+
+    def get_queryset(self):
+        """
+        Use the db_name set when the API is built.
+        """
+        queryset = super().get_queryset()
+        return queryset.using(self.db_name)
 
     def get_permission(self):
         """
