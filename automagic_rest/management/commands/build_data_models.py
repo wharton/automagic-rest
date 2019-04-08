@@ -156,6 +156,12 @@ class Command(BaseCommand):
         """
         return "automagic_rest.views.GenericViewSet"
 
+    def get_router(self):
+        """
+        Returns the path to the router to be used.
+        """
+        return "rest_framework.routers.DefaultRouter"
+
     def sanitize_sql_identifier(self, identifier):
         """
         PG schemata should only contain alphanumerics and underscore.
@@ -262,9 +268,10 @@ class Command(BaseCommand):
         print("Getting the metadata from PostgreSQL...")
         schemata_data = self.get_endpoint_metadata(options, cursor)
 
-        # Get the serializer and view data from the full path
+        # Get the serializer, view, and router data from the full path
         serializer_data = self.get_serializer().split(".")
         view_data = self.get_view().split(".")
+        router_data = self.get_router().split(".")
 
         # Initial context. Set up so it doesn't try to write on the first
         # pass through
@@ -274,6 +281,8 @@ class Command(BaseCommand):
             "serializer_path": ".".join(serializer_data),
             "view": view_data.pop(),
             "view_path": ".".join(view_data),
+            "router": router_data.pop(),
+            "router_path": ".".join(router_data),
             "routes": [],
         }
         model_count = 0
