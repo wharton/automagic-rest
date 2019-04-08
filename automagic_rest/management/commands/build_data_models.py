@@ -102,39 +102,37 @@ class Command(BaseCommand):
             '--database',
             action='store',
             dest='database',
-            default="pgdata",
+            default="my_pg_data",
             help='The database to use. Defaults to the "pgdata" database.'
-        )
-        parser.add_argument(
-            '--schema',
-            action='store',
-            dest='schema',
-            default="",
-            help='A specific product to remodel, by schema name from PostgreSQL. Omit for all.'
         )
         parser.add_argument(
             '--owner',
             action='store',
             dest='owner',
-            default="wrdsadmn",
+            default="my_pg_user",
             help='Select schemata from this PostgreSQL owner user. Defaults to the "wrdsadmn" owner.'
         )
         parser.add_argument(
             '--path',
             action='store',
             dest='path',
-            default="data",
+            default="data_path",
             help='The path where to place the model and serializer files.',
         )
+
+    def get_db(self, options):
+        """
+        Returns the Django name of the PostgreSQL database we will connect to.
+        """
+        return options.get('database')
 
     def connect_cursor(self, options, db=None):
         """
         Returns a cursor for a database defined in Django's settings.
         """
 
-        # Get the database we're working with from options if it isn't passed implicitly
         if db is None:
-            db = options.get('database')
+            db = self.get_db(options)
         connection = connections[db]
 
         cursor = connection.cursor()
@@ -142,6 +140,9 @@ class Command(BaseCommand):
         return cursor
 
     def get_root_python_path(self, options):
+        """
+        Returns the root Python path where we will build the API.
+        """
         return options.get('path')
 
     def get_serializer(self):
@@ -168,7 +169,10 @@ class Command(BaseCommand):
         """
         return sub('[^0-9a-zA-Z]+', '_', identifier)
 
-    def metadata_sql(self, schema_sql, allowed_schemata_sql):
+    def metadata_sql(self, allowed_schemata_sql):
+        """
+        Returns the SQL to pull the introspection metadata.
+        """
         return f"""
             SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length
 
@@ -179,7 +183,6 @@ class Command(BaseCommand):
 
             WHERE s.schema_owner = %(schema_owner)s
             AND c.table_name NOT LIKE '%%chars'
-            {schema_sql}
             {allowed_schemata_sql}
 
             ORDER BY s.schema_name, c.table_name, c.column_name
@@ -203,23 +206,20 @@ class Command(BaseCommand):
 
         return allowed_schemata_sql
 
+    def get_owner(self, options):
+        """
+        Returns the PostgreSQL DB user that owns the schemata to be
+        processed.
+        """
+        return options.get('owner')
+
     def get_endpoint_metadata(self, options, cursor):
-        schema = options.get('schema')
-        owner = options.get('owner')
+        owner = self.get_owner(options)
 
         allowed_schemata = self.get_allowed_schemata(options, cursor)
         allowed_schemata_sql = self.get_allowed_schemata_sql(allowed_schemata)
 
-        schema_sql = ""
-        if len(schema):
-            schema = self.sanitize_sql_identifier(schema)
-
-            if schema in allowed_schemata:
-                schema_sql = f"AND s.schema_name = '{schema}'"
-            else:
-                print("WARNING! The product you specified isn't in the WRDS product list. Running all endpoints.")
-
-        sql = self.metadata_sql(schema_sql, allowed_schemata_sql)
+        sql = self.metadata_sql(allowed_schemata_sql)
         cursor.execute(
             sql,
             {
