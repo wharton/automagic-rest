@@ -103,7 +103,7 @@ class Command(BaseCommand):
             action='store',
             dest='database',
             default="my_pg_data",
-            help='The database to use. Defaults to the "pgdata" database.'
+            help='The database to use. Defaults to the "my_pg_data" database.'
         )
         parser.add_argument(
             '--owner',
