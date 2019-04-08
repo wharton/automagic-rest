@@ -5,7 +5,7 @@ from {{ view_path }} import {{ view }}
 
 router = {{ router }}()
 {% for route in routes %}
-router.register(r"{{ route }}", {{ view }}, base_name="{{ route }}"){% endfor %}
+router.register(r"{{ route }}", {{ view }}, base_name="{{ root_python_path }}.{{ route }}"){% endfor %}
 
 urlpatterns = [
     path('', include(router.urls)),

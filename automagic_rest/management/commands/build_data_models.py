@@ -141,7 +141,7 @@ class Command(BaseCommand):
 
         return cursor
 
-    def get_path(self, options):
+    def get_root_python_path(self, options):
         return options.get('path')
 
     def get_serializer(self):
@@ -255,7 +255,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Get the provided root path and create directories
-        root_path = self.get_path(options)
+        root_python_path = self.get_root_python_path(options)
+        root_path = root_python_path.replace(".", os.sep)
         os.makedirs(root_path + os.sep + "models", exist_ok=True)
         os.makedirs(root_path + os.sep + "serializers", exist_ok=True)
 
@@ -277,6 +278,7 @@ class Command(BaseCommand):
         # pass through
         context = {
             "schema_name": None,
+            "root_python_path": root_python_path,
             "serializer": serializer_data.pop(),
             "serializer_path": ".".join(serializer_data),
             "view": view_data.pop(),

@@ -17,10 +17,11 @@ def split_basename(basename):
     Splits a base name into schema and table names.
     """
     parts = basename.split(".")
-    schema_name = parts[0].lower()
-    table_name = parts[1].lower()
+    python_path_name = parts[0].lower()
+    schema_name = parts[1].lower()
+    table_name = parts[2].lower()
 
-    return schema_name, table_name
+    return python_path_name, schema_name, table_name
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
@@ -41,17 +42,16 @@ class GenericViewSet(ReadOnlyModelViewSet):
         WHERE n.nspname = %(table_schema)s
             AND c.relname = %(table_name)s
     """
-    app_prefix = "data_full"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        schema_name, table_name = split_basename(self.basename)
+        python_path_name, schema_name, table_name = split_basename(self.basename)
         api_model = getattr(
-            import_module(f"{self.app_prefix}.models.{schema_name}"),
+            import_module(f"{python_path_name}.models.{schema_name}"),
             f"{table_name}_model",
         )
         api_serializer = getattr(
-            import_module(f"{self.app_prefix}.serializers.{schema_name}"),
+            import_module(f"{python_path_name}.serializers.{schema_name}"),
             f"{table_name}_serializer",
         )
         api_permission = self.get_permission()
