@@ -10,11 +10,17 @@ To get started, `pip install automagic-rest` and add `automagic_rest` to your `I
 
 ## Configuration and Customization
 
-By default, Automagic REST will create a directory called `data` at the root of your Django project, where `manage.py` lives.
+By default, Automagic REST will create a directory called `data_path` at the root of your Django project, where `manage.py` lives. The follow options can be passed to the command:
 
-Methods are provided which can be overridden to customize the endpoint.
+* `--database` (default: `my_pg_data`): the name of the Django database as defined in the `DATABASES` setting.
+* `--owner` (default: `my_pg_user`): the name of the PostgreSQL user which owns the schemata. This will normally be the same as the `USER` in the `DATABASES` setting for the database above.
+* `--path` (default: `data_path`): the path to write the models and serializers to. This path will be completely deleted and rewritten whenever the command is run, so be careful!
 
-#### class automagic_rest.management.commands.build_data_models.Command
+Example: `python manage.py build_data_models --database=my_data --owner=my_user --path=my_data_path`
+
+Methods are provided which can be overridden to customize the endpoint with your own Django management command.
+
+### class automagic_rest.management.commands.build_data_models.Command
 
 `get_db` (default: `my_pg_data`): the name of the PostgreSQL database in Django's settings that we will introspect to build the API.
 
