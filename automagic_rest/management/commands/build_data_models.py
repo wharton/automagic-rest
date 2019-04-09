@@ -18,14 +18,22 @@ COLUMN_FIELD_MAP = {
     'integer': 'IntegerField({}blank=True, null=True{})',
     'bigint': 'BigIntegerField({}blank=True, null=True{})',
 
+    'boolean': 'BooleanField({}blank=True, null=True{})',
+
     'numeric': 'DecimalField({}blank=True, null=True{})',
     'double precision': 'FloatField({}blank=True, null=True{})',
+    'real': 'FloatField({}blank=True, null=True{})',
 
     'date': 'DateField({}blank=True, null=True{})',
+    'timestamp with time zone': 'DateTimeField({}blank=True, null=True{})',
     'timestamp without time zone': 'DateTimeField({}blank=True, null=True{})',
+    'time with time zone': 'TimeField({}blank=True, null=True{})',
     'time without time zone': 'TimeField({}blank=True, null=True{})',
 
+    'character': 'TextField({}blank=True, null=True{})',
     'character varying': 'TextField({}blank=True, null=True{})',
+    'text': 'TextField({}blank=True, null=True{})',
+    'uuid': 'UUIDField({}blank=True, null=True{})',
 }
 
 # Python reserved words list
