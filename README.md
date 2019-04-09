@@ -99,7 +99,9 @@ class Command(build_data_models.Command):
 
     def get_allowed_schemata(self, options, cursor):
         """
-        Get the list of products from SQL Server
+        Return a list of allowed schemata we want to create RESTful
+        endpoints for. If None, will create endpoints for all schemata
+        owner the the schema owner user.
         """
         allowed_schemata = ['my_data', 'public_data']
 
