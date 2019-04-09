@@ -10,10 +10,31 @@ To get started, `pip install automagic-rest` and add `automagic_rest` to your `I
 
 ## Configuration and Customization
 
+Setting up a secondary database in Django is recommended. For the following examples, we'll set up one called `my_pg_data` with the user `my_pg_user`:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pg_web_db',
+        'USER': 'web_user',
+        'PASSWORD': '',
+        'HOST': 'pg-web.domain.com',
+    },
+    'my_pg_data': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pg_data_db',
+        'USER': 'my_pg_user',
+        'PASSWORD': '',
+        'HOST': 'pg-data.domain.com',
+    },
+}
+```
+
 By default, Automagic REST will create a directory called `data_path` at the root of your Django project, where `manage.py` lives. The follow options can be passed to the command:
 
 * `--database` (default: `my_pg_data`): the name of the Django database as defined in the `DATABASES` setting.
-* `--owner` (default: `my_pg_user`): the name of the PostgreSQL user which owns the schemata. This will normally be the same as the `USER` in the `DATABASES` setting for the database above.
+* `--owner` (default: `my_pg_user`): the name of the PostgreSQL user which owns the schemata to be processed. This will normally be the same as the `USER` in the `DATABASES` setting for the database above.
 * `--path` (default: `data_path`): the path to write the models and serializers to. This path will be completely deleted and rewritten whenever the command is run, so be careful!
 
 Example: `python manage.py build_data_models --database=my_data --owner=my_user --path=my_data_path`
@@ -99,6 +120,25 @@ The view has several methods and attributes which can be overridden as well.
 
 `get_estimate_count_limit` (default: `999_999`): to prevent long-running `SELECT COUNT(*)` queries, the view estimates the number of rows in the table by examing the query plan. If greater than this number, it will estimate pagination counts for vastly improved speed.
 
+To follow on the example above, here is an example of an overridden view, which sets the permission type and includes a mixin for naming Excel file downloads:
+
+```python
+from rest_framework.permissions import IsAuthenticated
+from drf_renderer_xlsx.mixins import XLSXFileMixin
+
+class WhartonResearchDataServicesViewSet(XLSXFileMixin, GenericViewSet):
+    """
+    """
+    """
+    Override the defaults from DRF PG Builder.
+    """
+    filename = 'my_export.xlsx'
+
+    def get_permission(self):
+        return IsAuthenticated
+```
+
 ### After the Files Are Built
 
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
+
