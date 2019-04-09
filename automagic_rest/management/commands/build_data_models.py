@@ -119,6 +119,13 @@ class Command(BaseCommand):
             default="data_path",
             help='The path where to place the model and serializer files.',
         )
+        parser.add_argument(
+            "--verbose",
+            action="store_true",
+            dest="verbose",
+            default=False,
+            help="""Sets verbose mode; displays each model built, instead of just schemata.""",
+        )
 
     def get_db(self, options):
         """
@@ -254,6 +261,7 @@ class Command(BaseCommand):
                 f.write(output)
 
     def handle(self, *args, **options):
+        verbose = options.get("verbose")
         # Get the provided root path and create directories
         root_python_path = self.get_root_python_path(options)
         root_path = root_python_path.replace(".", os.sep)
@@ -305,7 +313,7 @@ class Command(BaseCommand):
 
             if row.table_name not in context["tables"]:
                 model_count += 1
-                if row.schema_name != "__BLANK__":
+                if row.schema_name != "__BLANK__" and verbose:
                     print(f"{model_count}: {row.table_name}")
                 context["tables"][row.table_name] = []
                 primary_key_has_been_set = False
