@@ -40,7 +40,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         JOIN pg_index i ON c.oid = i.indrelid
         JOIN pg_attribute a ON a.attnum = i.indkey[0]
             AND a.attrelid = c.oid
-        WHERE n.nspname = %(table_schema)s
+        WHERE n.nspname = %(schema_name)s
             AND c.relname = %(table_name)s
     """
 
@@ -159,7 +159,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         cursor = connections[db_name].cursor()
 
         cursor.execute(
-            self.index_sql, {"table_schema": schema_name, "table_name": table_name}
+            self.index_sql, {"schema_name": schema_name, "table_name": table_name}
         )
 
         rows = cursor.fetchall()
