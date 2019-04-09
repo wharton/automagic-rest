@@ -5,7 +5,7 @@ with open('README.md') as f:
 
 setup(
     name="automagic-rest",
-    version="0.1.0.dev3",
+    version="0.1.0",
     description="Automagic REST: Django REST Framework PostgreSQL Builder",
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -20,7 +20,7 @@ setup(
         "djangorestframework-filters==1.0.0.dev0",
     ],
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
