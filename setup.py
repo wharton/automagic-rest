@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-with open('README.md') as f:
+with open("README.md") as f:
     long_description = f.read()
 
 setup(
@@ -8,7 +8,7 @@ setup(
     version="0.1.0",
     description="Automagic REST: Django REST Framework PostgreSQL Builder",
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     author="Timothy Allen",
     author_email="tallen@wharton.upenn.edu",
     url="https://github.com/wharton/automagic-rest",

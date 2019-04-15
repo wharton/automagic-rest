@@ -47,7 +47,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.db_name, python_path_name, schema_name, table_name = split_basename(
-            self.basename,
+            self.basename
         )
         api_model = getattr(
             import_module(f"{python_path_name}.models.{schema_name}"),
@@ -62,8 +62,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         # Grab the estimated count from the query plan; if its a large table,
         # use the count estimate for Pagination instead of an exact count.
         table_estimate_count = estimate_count(
-            self.db_name,
-            f"SELECT * FROM {schema_name}.{table_name}"
+            self.db_name, f"SELECT * FROM {schema_name}.{table_name}"
         )
         if table_estimate_count > self.get_estimate_count_limit():
             self.pagination_class = CountEstimatePagination
@@ -81,11 +80,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         # Add any columns indexed in the PostgreSQL database to be
         # filterable columns in the API
-        index_columns = self.get_indexes(
-            self.db_name,
-            schema_name,
-            table_name,
-        )
+        index_columns = self.get_indexes(self.db_name, schema_name, table_name)
 
         # If any columns are indexed, add the appropriate filter backends
         # and set up a dictionary of filter fields

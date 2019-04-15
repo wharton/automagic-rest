@@ -14,73 +14,67 @@ from django.template.loader import render_to_string
 # The first column in the table is always marked as the
 # primary key.
 COLUMN_FIELD_MAP = {
-    'smallint': 'IntegerField({}blank=True, null=True{})',
-    'integer': 'IntegerField({}blank=True, null=True{})',
-    'bigint': 'BigIntegerField({}blank=True, null=True{})',
-
-    'boolean': 'BooleanField({}blank=True, null=True{})',
-
-    'numeric': 'DecimalField({}blank=True, null=True{})',
-    'double precision': 'FloatField({}blank=True, null=True{})',
-    'real': 'FloatField({}blank=True, null=True{})',
-
-    'date': 'DateField({}blank=True, null=True{})',
-    'timestamp with time zone': 'DateTimeField({}blank=True, null=True{})',
-    'timestamp without time zone': 'DateTimeField({}blank=True, null=True{})',
-    'time with time zone': 'TimeField({}blank=True, null=True{})',
-    'time without time zone': 'TimeField({}blank=True, null=True{})',
-
-    'character': 'TextField({}blank=True, null=True{})',
-    'character varying': 'TextField({}blank=True, null=True{})',
-    'text': 'TextField({}blank=True, null=True{})',
-    'uuid': 'UUIDField({}blank=True, null=True{})',
+    "smallint": "IntegerField({}blank=True, null=True{})",
+    "integer": "IntegerField({}blank=True, null=True{})",
+    "bigint": "BigIntegerField({}blank=True, null=True{})",
+    "boolean": "BooleanField({}blank=True, null=True{})",
+    "numeric": "DecimalField({}blank=True, null=True{})",
+    "double precision": "FloatField({}blank=True, null=True{})",
+    "real": "FloatField({}blank=True, null=True{})",
+    "date": "DateField({}blank=True, null=True{})",
+    "timestamp with time zone": "DateTimeField({}blank=True, null=True{})",
+    "timestamp without time zone": "DateTimeField({}blank=True, null=True{})",
+    "time with time zone": "TimeField({}blank=True, null=True{})",
+    "time without time zone": "TimeField({}blank=True, null=True{})",
+    "character": "TextField({}blank=True, null=True{})",
+    "character varying": "TextField({}blank=True, null=True{})",
+    "text": "TextField({}blank=True, null=True{})",
+    "uuid": "UUIDField({}blank=True, null=True{})",
 }
 
 # Python reserved words list
 # These can not be made into field names; we will append
 # `_var` to any fields with these names.
 RESERVED_WORDS = [
-    'False',
-    'None',
-    'True',
-    'and',
-    'as',
-    'assert',
-    'async',
-    'await',
-    'break',
-    'class',
-    'continue',
-    'def',
-    'del',
-    'elif',
-    'else',
-    'except',
-    'finally',
-    'for',
-    'from',
-    'global',
-    'if',
-    'import',
-    'in',
-    'is',
-    'lambda',
-    'nonlocal',
-    'not',
-    'or',
-    'pass',
-    'raise',
-    'return',
-    'try',
-    'while',
-    'with',
-    'yield',
+    "False",
+    "None",
+    "True",
+    "and",
+    "as",
+    "assert",
+    "async",
+    "await",
+    "break",
+    "class",
+    "continue",
+    "def",
+    "del",
+    "elif",
+    "else",
+    "except",
+    "finally",
+    "for",
+    "from",
+    "global",
+    "if",
+    "import",
+    "in",
+    "is",
+    "lambda",
+    "nonlocal",
+    "not",
+    "or",
+    "pass",
+    "raise",
+    "return",
+    "try",
+    "while",
+    "with",
+    "yield",
 ]
 
 # Additional words DRF needs
-RESERVED_WORDS.append(
-    'format',
-)
+RESERVED_WORDS.append("format")
 
 
 def fetch_result_with_blank_row(cursor):
@@ -89,11 +83,9 @@ def fetch_result_with_blank_row(cursor):
     model and column are written in the loop.
     """
     results = cursor.fetchall()
-    results.append(
-        ('__BLANK__', '__BLANK__', '__BLANK__', 'integer', '__BLANK__')
-    )
+    results.append(("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__"))
     desc = cursor.description
-    nt_result = namedtuple('Result', [col[0] for col in desc])
+    nt_result = namedtuple("Result", [col[0] for col in desc])
 
     return [nt_result(*row) for row in results]
 
@@ -107,25 +99,25 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--database',
-            action='store',
-            dest='database',
+            "--database",
+            action="store",
+            dest="database",
             default="my_pg_data",
-            help='The database to use. Defaults to the "my_pg_data" database.'
+            help='The database to use. Defaults to the "my_pg_data" database.',
         )
         parser.add_argument(
-            '--owner',
-            action='store',
-            dest='owner',
+            "--owner",
+            action="store",
+            dest="owner",
             default="my_pg_user",
-            help='Select schemata from this PostgreSQL owner user. Defaults to the "wrdsadmn" owner.'
+            help='Select schemata from this PostgreSQL owner user. Defaults to the "wrdsadmn" owner.',
         )
         parser.add_argument(
-            '--path',
-            action='store',
-            dest='path',
+            "--path",
+            action="store",
+            dest="path",
             default="data_path",
-            help='The path where to place the model and serializer files.',
+            help="The path where to place the model and serializer files.",
         )
         parser.add_argument(
             "--verbose",
@@ -139,7 +131,7 @@ class Command(BaseCommand):
         """
         Returns the Django name of the PostgreSQL database we will connect to.
         """
-        return options.get('database')
+        return options.get("database")
 
     def connect_cursor(self, options, db=None):
         """
@@ -158,7 +150,7 @@ class Command(BaseCommand):
         """
         Returns the root Python path where we will build the API.
         """
-        return options.get('path')
+        return options.get("path")
 
     def get_serializer(self):
         """
@@ -182,7 +174,7 @@ class Command(BaseCommand):
         """
         PG schemata should only contain alphanumerics and underscore.
         """
-        return sub('[^0-9a-zA-Z]+', '_', identifier)
+        return sub("[^0-9a-zA-Z]+", "_", identifier)
 
     def metadata_sql(self, allowed_schemata_sql):
         """
@@ -217,7 +209,9 @@ class Command(BaseCommand):
         """
         allowed_schemata_sql = ""
         if allowed_schemata:
-            allowed_schemata_sql = f"""AND s.schema_name IN ('{"', '".join(allowed_schemata)}')"""
+            allowed_schemata_sql = (
+                f"""AND s.schema_name IN ('{"', '".join(allowed_schemata)}')"""
+            )
 
         return allowed_schemata_sql
 
@@ -226,7 +220,7 @@ class Command(BaseCommand):
         Returns the PostgreSQL DB user that owns the schemata to be
         processed.
         """
-        return options.get('owner')
+        return options.get("owner")
 
     def get_endpoint_metadata(self, options, cursor):
         owner = self.get_owner(options)
@@ -235,12 +229,7 @@ class Command(BaseCommand):
         allowed_schemata_sql = self.get_allowed_schemata_sql(allowed_schemata)
 
         sql = self.metadata_sql(allowed_schemata_sql)
-        cursor.execute(
-            sql,
-            {
-                "schema_owner": owner,
-            }
-        )
+        cursor.execute(sql, {"schema_owner": owner})
 
         rows = fetch_result_with_blank_row(cursor)
 
@@ -250,10 +239,10 @@ class Command(BaseCommand):
         """
         Removes the previously generated files so we can recreate them.
         """
-        for path in ('models', 'serializers'):
-            files_to_delete = glob(f'{root_path}/{path}/*.py')
+        for path in ("models", "serializers"):
+            files_to_delete = glob(f"{root_path}/{path}/*.py")
             for f in files_to_delete:
-                if not f.endswith('__.py'):
+                if not f.endswith("__.py"):
                     os.remove(f)
 
     def write_schema_files(self, root_path, context):
@@ -262,8 +251,7 @@ class Command(BaseCommand):
         """
         for output_file in ("models", "serializers"):
             with open(
-                f"""{root_path}/{output_file}/{context["schema_name"]}.py""",
-                "w",
+                f"""{root_path}/{output_file}/{context["schema_name"]}.py""", "w"
             ) as f:
                 output = render_to_string(f"automagic_rest/{output_file}.html", context)
                 f.write(output)
@@ -325,32 +313,31 @@ class Command(BaseCommand):
                     print(f"{model_count}: {row.table_name}")
                 context["tables"][row.table_name] = []
                 primary_key_has_been_set = False
-                context["routes"].append(
-                    f"""{row.schema_name}.{row.table_name}"""
-                )
+                context["routes"].append(f"""{row.schema_name}.{row.table_name}""")
 
             # If the column name is a Python reserved word, append an underscore
             # to follow the Python convention
-            if row.column_name in RESERVED_WORDS or row.column_name.endswith('_'):
-                if row.column_name.endswith('_'):
-                    under_score = ''
+            if row.column_name in RESERVED_WORDS or row.column_name.endswith("_"):
+                if row.column_name.endswith("_"):
+                    under_score = ""
                 else:
-                    under_score = '_'
-                column_name = '{}{}var'.format(
-                    row.column_name,
-                    under_score,
-                )
+                    under_score = "_"
+                column_name = "{}{}var".format(row.column_name, under_score)
                 db_column = ", db_column='{}'".format(row.column_name)
             else:
                 column_name = row.column_name
-                db_column = ''
+                db_column = ""
 
-            if(primary_key_has_been_set):
-                field_map = COLUMN_FIELD_MAP[row.data_type].format('', db_column)
+            if primary_key_has_been_set:
+                field_map = COLUMN_FIELD_MAP[row.data_type].format("", db_column)
             else:
                 # We'll make the first column the primary key, since once is required in the Django ORM
                 # and this is read-only. Primary keys can not be set to NULL in Django.
-                field_map = COLUMN_FIELD_MAP[row.data_type].format('primary_key=True', db_column).replace('blank=True, null=True', '')
+                field_map = (
+                    COLUMN_FIELD_MAP[row.data_type]
+                    .format("primary_key=True", db_column)
+                    .replace("blank=True, null=True", "")
+                )
                 primary_key_has_been_set = True
 
             context["tables"][row.table_name].append(
