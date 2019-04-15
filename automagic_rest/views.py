@@ -51,11 +51,11 @@ class GenericViewSet(ReadOnlyModelViewSet):
         )
         api_model = getattr(
             import_module(f"{python_path_name}.models.{schema_name}"),
-            f"{table_name}_model",
+            f"{schema_name}_{table_name}_model",
         )
         api_serializer = getattr(
             import_module(f"{python_path_name}.serializers.{schema_name}"),
-            f"{table_name}_serializer",
+            f"{schema_name}_{table_name}_serializer",
         )
         api_permission = self.get_permission()
 
