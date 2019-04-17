@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
     name="automagic-rest",
-    version="0.1.1",
+    version="0.1.2",
     description="Automagic REST: Django REST Framework PostgreSQL Builder",
     long_description=long_description,
     long_description_content_type="text/markdown",
