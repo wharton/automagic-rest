@@ -144,3 +144,16 @@ class WhartonResearchDataServicesViewSet(XLSXFileMixin, GenericViewSet):
 
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
 
+## Release Notes
+
+### 0.1.2
+
+* Add support for `DecimalField` with `max_digits` and `decimal_places` from `information_schema.columns` fields.
+
+### 0.1.1
+
+* Switched to naming models and serializers with a combination of `schema_name` and `table_name` to avoid model naming conflicts in Django if the same table exists across multiple schemata.
+
+### 0.1.0
+
+* Initial release.
