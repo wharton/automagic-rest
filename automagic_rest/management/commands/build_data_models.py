@@ -83,7 +83,7 @@ def fetch_result_with_blank_row(cursor):
     model and column are written in the loop.
     """
     results = cursor.fetchall()
-    results.append(("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__"))
+    results.append(("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__", 0, 0))
     desc = cursor.description
     nt_result = namedtuple("Result", [col[0] for col in desc])
 
@@ -181,7 +181,8 @@ class Command(BaseCommand):
         Returns the SQL to pull the introspection metadata.
         """
         return f"""
-            SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length
+            SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length,
+            c.numeric_precision, c.numeric_scale
 
             FROM information_schema.schemata s
 
@@ -327,6 +328,12 @@ class Command(BaseCommand):
             else:
                 column_name = row.column_name
                 db_column = ""
+
+            # For decimals, add the max_length and decimal places
+            if row.data_type == "numeric":
+                max_digits = getattr(row, "numeric_precision", 50)
+                decimal_places = getattr(row, "decimal_places", 0)
+                db_column += f", max_digits={max_digits}, decimal_places={decimal_places}"
 
             if primary_key_has_been_set:
                 field_map = COLUMN_FIELD_MAP[row.data_type].format("", db_column)
