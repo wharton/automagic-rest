@@ -128,7 +128,7 @@ To follow on the example above, here is an example of an overridden view, which 
 from rest_framework.permissions import IsAuthenticated
 from drf_renderer_xlsx.mixins import XLSXFileMixin
 
-class WhartonResearchDataServicesViewSet(XLSXFileMixin, GenericViewSet):
+class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
     """
     """
     """
