@@ -51,8 +51,6 @@ Methods are provided which can be overridden to customize the endpoint with your
 
 `get_root_python_path` (default: `data_path`): a Python path where you would like to write the models, serializers, and routes. **IMPORTANT**: this path will be wiped and re-written every time the build command is run. It should be a dedicated directory with nothing else in it.
 
-`get_serializer` (default: `rest_framework.serializers.ModelSerializer`): the serializer to use.
-
 `get_view` (default: `automagic_rest.views.GenericViewSet`): the view to use.
 
 `get_router` (default: `rest_framework.routers.DefaultRouter`): the router to use.
@@ -118,6 +116,8 @@ The view has several methods and attributes which can be overridden as well.
 
 #### Methods
 
+`get_serializer_class_name` (default: `rest_framework.serializers.ModelSerializer`): the full path of the serializer class to use.
+
 `get_permission` (default: `None`): returns a permission class to use for the endpoint. When left at the default of `None`, uses the default permission class set by Django REST Framework.
 
 `get_estimate_count_limit` (default: `999_999`): to prevent long-running `SELECT COUNT(*)` queries, the view estimates the number of rows in the table by examing the query plan. If greater than this number, it will estimate pagination counts for vastly improved speed.
@@ -145,6 +145,12 @@ class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
 
 ## Release Notes
+
+### 0.2.0
+
+* Refactored to use a generic serializer created on the fly. This is potentially a breaking change if you overrode the `get_serializer` method of the `build_data_models` command.
+    * This has been replaced by a view method called `get_serializer_class_name`.
+    * The serializer is now built on-the-fly rather than by the code generator.
 
 ### 0.1.2
 
