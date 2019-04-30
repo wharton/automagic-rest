@@ -18,11 +18,11 @@ def split_basename(basename):
     """
     parts = basename.split(".")
     db_name = parts[0]
-    self.python_path_name = parts[1]
-    self.schema_name = parts[2]
-    self.table_name = parts[3]
+    python_path_name = parts[1]
+    schema_name = parts[2]
+    table_name = parts[3]
 
-    return db_name, self.python_path_name, self.schema_name, self.table_name
+    return db_name, python_path_name, schema_name, table_name
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
