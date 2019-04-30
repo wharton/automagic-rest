@@ -18,11 +18,11 @@ def split_basename(basename):
     """
     parts = basename.split(".")
     db_name = parts[0]
-    python_path_name = parts[1]
-    schema_name = parts[2]
-    table_name = parts[3]
+    self.python_path_name = parts[1]
+    self.schema_name = parts[2]
+    self.table_name = parts[3]
 
-    return db_name, python_path_name, schema_name, table_name
+    return db_name, self.python_path_name, self.schema_name, self.table_name
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
@@ -46,28 +46,28 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.db_name, python_path_name, schema_name, table_name = split_basename(
+        self.db_name, self.python_path_name, self.schema_name, self.table_name = split_basename(
             self.basename
         )
-        api_model = getattr(
-            import_module(f"{python_path_name}.models.{schema_name}"),
-            f"{schema_name}_{table_name}_model",
+
+        self.model = getattr(
+            import_module(f"{self.python_path_name}.models.{self.schema_name}"),
+            f"{self.schema_name}_{self.table_name}_model",
         )
         api_serializer = getattr(
-            import_module(f"{python_path_name}.serializers.{schema_name}"),
-            f"{schema_name}_{table_name}_serializer",
+            import_module(f"{self.python_path_name}.serializers.{self.schema_name}"),
+            f"{self.schema_name}_{self.table_name}_serializer",
         )
         api_permission = self.get_permission()
 
         # Grab the estimated count from the query plan; if its a large table,
         # use the count estimate for Pagination instead of an exact count.
         table_estimate_count = estimate_count(
-            self.db_name, f"SELECT * FROM {schema_name}.{table_name}"
+            self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
         )
         if table_estimate_count > self.get_estimate_count_limit():
             self.pagination_class = CountEstimatePagination
 
-        self.queryset = api_model.objects.all()
         self.serializer_class = api_serializer
 
         # Only override permissions if provided.
@@ -80,7 +80,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         # Add any columns indexed in the PostgreSQL database to be
         # filterable columns in the API
-        index_columns = self.get_indexes(self.db_name, schema_name, table_name)
+        index_columns = self.get_indexes()
 
         # If any columns are indexed, add the appropriate filter backends
         # and set up a dictionary of filter fields
@@ -94,7 +94,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         # Loop through all of the fields. If the field is indexed, add it
         # to the allowed filter columns. Additionally, if it is a text type,
         # add it to the searchable columns for the data browser.
-        for field in api_model._meta.get_fields():
+        for field in self.model._meta.get_fields():
             if field.name in index_columns:
                 field_type = field.get_internal_type()
                 if field_type in ("CharField", "TextField"):
@@ -127,8 +127,8 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         Use the db_name set when the API is built.
         """
-        queryset = super().get_queryset()
-        return queryset.using(self.db_name)
+        queryset = self.model.objects.using(self.db_name).all()
+        return queryset
 
     def get_permission(self):
         """
@@ -145,16 +145,16 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         return 999_999
 
-    def get_indexes(self, db_name, schema_name, table_name):
+    def get_indexes(self):
         """
         Return a list of unique columns that are part of an index on a table
         by providing schema name and table name.
         """
 
-        cursor = connections[db_name].cursor()
+        cursor = connections[self.db_name].cursor()
 
         cursor.execute(
-            self.index_sql, {"schema_name": schema_name, "table_name": table_name}
+            self.index_sql, {"schema_name": self.schema_name, "table_name": self.table_name}
         )
 
         rows = cursor.fetchall()
