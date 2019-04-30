@@ -117,7 +117,7 @@ class Command(BaseCommand):
             action="store",
             dest="path",
             default="data_path",
-            help="The path where to place the model and serializer files.",
+            help="The path where to place the model files.",
         )
         parser.add_argument(
             "--verbose",
@@ -152,15 +152,9 @@ class Command(BaseCommand):
         """
         return options.get("path")
 
-    def get_serializer(self):
-        """
-        Returns the path to the serializer to be used.
-        """
-        return "rest_framework.serializers.ModelSerializer"
-
     def get_view(self):
         """
-        Returns the path to the serializer to be used.
+        Returns the path to the view to be used.
         """
         return "automagic_rest.views.GenericViewSet"
 
@@ -240,22 +234,20 @@ class Command(BaseCommand):
         """
         Removes the previously generated files so we can recreate them.
         """
-        for path in ("models", "serializers"):
-            files_to_delete = glob(f"{root_path}/{path}/*.py")
-            for f in files_to_delete:
-                if not f.endswith("__.py"):
-                    os.remove(f)
+        files_to_delete = glob(f"{root_path}/models/*.py")
+        for f in files_to_delete:
+            if not f.endswith("__.py"):
+                os.remove(f)
 
     def write_schema_files(self, root_path, context):
         """
-        Write out the current schema model and serializer.
+        Write out the current schema model.
         """
-        for output_file in ("models", "serializers"):
-            with open(
-                f"""{root_path}/{output_file}/{context["schema_name"]}.py""", "w"
-            ) as f:
-                output = render_to_string(f"automagic_rest/{output_file}.html", context)
-                f.write(output)
+        with open(
+            f"""{root_path}/models/{context["schema_name"]}.py""", "w"
+        ) as f:
+            output = render_to_string(f"automagic_rest/models.html", context)
+            f.write(output)
 
     def handle(self, *args, **options):
         verbose = options.get("verbose")
@@ -263,7 +255,6 @@ class Command(BaseCommand):
         root_python_path = self.get_root_python_path(options)
         root_path = root_python_path.replace(".", os.sep)
         os.makedirs(root_path + os.sep + "models", exist_ok=True)
-        os.makedirs(root_path + os.sep + "serializers", exist_ok=True)
 
         if len(options.get("schema", "")) == 0:
             self.delete_generated_files(root_path)
@@ -274,8 +265,7 @@ class Command(BaseCommand):
         print("Getting the metadata from PostgreSQL...")
         schemata_data = self.get_endpoint_metadata(options, cursor)
 
-        # Get the serializer, view, and router data from the full path
-        serializer_data = self.get_serializer().split(".")
+        # Get the view, and router data from the full path
         view_data = self.get_view().split(".")
         router_data = self.get_router().split(".")
 
@@ -285,8 +275,6 @@ class Command(BaseCommand):
             "db_name": self.get_db(options),
             "schema_name": None,
             "root_python_path": root_python_path,
-            "serializer": serializer_data.pop(),
-            "serializer_path": ".".join(serializer_data),
             "view": view_data.pop(),
             "view_path": ".".join(view_data),
             "router": router_data.pop(),

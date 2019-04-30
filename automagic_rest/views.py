@@ -54,10 +54,6 @@ class GenericViewSet(ReadOnlyModelViewSet):
             import_module(f"{self.python_path_name}.models.{self.schema_name}"),
             f"{self.schema_name}_{self.table_name}_model",
         )
-        api_serializer = getattr(
-            import_module(f"{self.python_path_name}.serializers.{self.schema_name}"),
-            f"{self.schema_name}_{self.table_name}_serializer",
-        )
         api_permission = self.get_permission()
 
         # Grab the estimated count from the query plan; if its a large table,
@@ -67,8 +63,6 @@ class GenericViewSet(ReadOnlyModelViewSet):
         )
         if table_estimate_count > self.get_estimate_count_limit():
             self.pagination_class = CountEstimatePagination
-
-        self.serializer_class = api_serializer
 
         # Only override permissions if provided.
         if api_permission:
@@ -129,6 +123,37 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         queryset = self.model.objects.using(self.db_name).all()
         return queryset
+
+    def get_serializer_class_name(self):
+        """
+        Returns the full path to the serializer class.
+        """
+        return "rest_framework.serializers.ModelSerializer"
+
+    def get_serializer_class(self):
+        """
+        Overrides Django REST Framework to dynamically create the serializer,
+        by importing the serializer, setting the model, and allowing all
+        fields.
+        """
+        parts = self.get_serializer_class_name().split(".")
+        module = parts.pop()
+        path = ".".join(parts)
+
+        APISerializer = getattr(
+            import_module(path),
+            module,
+        )
+
+        class GenericSerializer(APISerializer):
+            """
+            Placeholder for the serializer we will create dynamically below.
+            """
+            class Meta:
+                model = self.model
+                fields = "__all__"
+
+        return GenericSerializer
 
     def get_permission(self):
         """
