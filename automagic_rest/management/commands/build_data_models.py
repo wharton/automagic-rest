@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 from glob import glob
+import keyword
 import os
 from re import sub
 
@@ -32,48 +33,14 @@ COLUMN_FIELD_MAP = {
     "uuid": "UUIDField({}blank=True, null=True{})",
 }
 
-# Python reserved words list
-# These can not be made into field names; we will append
-# `_var` to any fields with these names.
-RESERVED_WORDS = [
-    "False",
-    "None",
-    "True",
-    "and",
-    "as",
-    "assert",
-    "async",
-    "await",
-    "break",
-    "class",
-    "continue",
-    "def",
-    "del",
-    "elif",
-    "else",
-    "except",
-    "finally",
-    "for",
-    "from",
-    "global",
-    "if",
-    "import",
-    "in",
-    "is",
-    "lambda",
-    "nonlocal",
-    "not",
-    "or",
-    "pass",
-    "raise",
-    "return",
-    "try",
-    "while",
-    "with",
-    "yield",
-]
+# Created a reserved words list that can not be used for Django field
+# names. Start with the Python reserved words list, and add any additional
+# fields reserved by DRF or Automagic REST.
+# We will then append `_var` to any fields with these names, and map to
+# the underlying database column in the models.
+RESERVED_WORDS = keyword.kwlist
 
-# Additional words DRF needs
+# Additional reserved words for Django REST Framework
 RESERVED_WORDS.append("format")
 
 
