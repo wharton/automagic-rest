@@ -146,6 +146,10 @@ After running the build command, you should have a directory created that you de
 
 ## Release Notes
 
+### 0.2.1
+
+* Pull the reserved word list from Python dynamically.
+
 ### 0.2.0
 
 * Refactored to use a generic serializer created on the fly. This is potentially a breaking change if you overrode the `get_serializer` method of the `build_data_models` command.
