@@ -131,6 +131,20 @@ class Command(BaseCommand):
         """
         return "rest_framework.routers.DefaultRouter"
 
+    def get_max_digits_default(self):
+        """
+        Returns the default max_digits for a numeric field
+        where they are not explicitly set in PostgreSQL.
+        """
+        return 100
+
+    def get_decimal_places_default(self):
+        """
+        Returns the default decimal_places for a numeric field
+        where they are not explicitly set in PostgreSQL.
+        """
+        return 25
+
     def sanitize_sql_identifier(self, identifier):
         """
         PG schemata should only contain alphanumerics and underscore.
@@ -218,6 +232,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         verbose = options.get("verbose")
+        max_digits_default = self.get_max_digits_default()
+        decimal_places_default = self.get_decimal_places_default()
         # Get the provided root path and create directories
         root_python_path = self.get_root_python_path(options)
         root_path = root_python_path.replace(".", os.sep)
@@ -286,8 +302,14 @@ class Command(BaseCommand):
 
             # For decimals, add the max_length and decimal places
             if row.data_type == "numeric":
-                max_digits = getattr(row, "numeric_precision", 50)
-                decimal_places = getattr(row, "decimal_places", 0)
+                max_digits = row.numeric_precision
+                if max_digits is None:
+                    max_digits = max_digits_default
+
+                decimal_places = row.numeric_scale
+                if decimal_places is None:
+                    decimal_places = decimal_places_default
+
                 db_column += f", max_digits={max_digits}, decimal_places={decimal_places}"
 
             if primary_key_has_been_set:

@@ -55,6 +55,10 @@ Methods are provided which can be overridden to customize the endpoint with your
 
 `get_router` (default: `rest_framework.routers.DefaultRouter`): the router to use.
 
+`get_max_digits_default` (default: 100): the number of `max_digits` to provide for `NUMERIC` field types that are not explicitly set in PostgreSQL.
+
+`get_decimal_places_default` (default: 25): the number of `decimal_places` to provide for `NUMERIC` field types that are not explicitly set in PostgreSQL.
+
 `sanitize_sql_identifier`: this method takes a string, and sanitizes it for injections into SQL, allowing only alphanumerics and underscores.
 
 `metadata_sql`: this method returns the SQL used to pull the metadata from PostgreSQL to build the endpoints.
@@ -145,6 +149,10 @@ class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
 
 ## Release Notes
+
+### 0.2.2
+
+* Ensure defaults for field type `NUMERIC` populate.
 
 ### 0.2.1
 
