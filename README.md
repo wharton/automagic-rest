@@ -103,7 +103,7 @@ class Command(build_data_models.Command):
         """
         Return a list of allowed schemata we want to create RESTful
         endpoints for. If None, will create endpoints for all schemata
-        owner the the schema owner user.
+        owned by the schema owner user.
         """
         allowed_schemata = ['my_data', 'public_data']
 
@@ -149,6 +149,10 @@ class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
 
 ## Release Notes
+
+### 0.2.3
+
+* Add support for `oid` field types in the field mapping.
 
 ### 0.2.2
 
