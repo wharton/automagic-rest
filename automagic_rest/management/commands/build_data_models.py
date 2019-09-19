@@ -18,6 +18,7 @@ COLUMN_FIELD_MAP = {
     "smallint": "IntegerField({}blank=True, null=True{})",
     "integer": "IntegerField({}blank=True, null=True{})",
     "bigint": "BigIntegerField({}blank=True, null=True{})",
+    "oid": "BigIntegerField({}blank=True, null=True{})",
     "boolean": "BooleanField({}blank=True, null=True{})",
     "numeric": "DecimalField({}blank=True, null=True{})",
     "double precision": "FloatField({}blank=True, null=True{})",
