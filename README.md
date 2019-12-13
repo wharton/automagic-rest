@@ -152,9 +152,13 @@ After running the build command, you should have a directory created that you de
 
 ## Release Notes
 
+### 0.2.4
+
+* Support for DRF version 3.11. Must use at least DRF version 3.9.
+
 ### 0.2.3
 
-* Add support for `oid` field types in the field mapping.
+* Add support for `oid` field types in the field mapping. Last version to support DRF versions before 3.9.
 
 ### 0.2.2
 
