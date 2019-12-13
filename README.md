@@ -154,7 +154,7 @@ After running the build command, you should have a directory created that you de
 
 ### 0.2.4
 
-* Support for DRF version 3.11. Must use at least DRF version 3.9.
+* Support for DRF version 3.11 (`base_name` must become `basename` in routes). Must use at least DRF version 3.9.
 
 ### 0.2.3
 
