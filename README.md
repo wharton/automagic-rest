@@ -4,7 +4,7 @@
 
 Automagic REST automatically builds a full Django app as a Django REST Framework read-only environment for a set of tables in a PostgreSQL database.
 
-This is very much in heavy development, being extracted from a production system and genericized for open source release.
+This is very much for a specific niche, but we have found it quite powerful for building a RESTful API on top of datasets we receive from other sources through introspection of PostgreSQL's `information_schema`.
 
 ## Installation
 
