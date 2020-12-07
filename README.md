@@ -194,4 +194,5 @@ This package is maintained by the staff of [Wharton Research Data Services](http
 
 ## Contributors (Thank You!)
 
+* [Alex Malek](https://github.com/amalek215)
 * [Andreu Vallbona Plazas](https://github.com/avallbona)
