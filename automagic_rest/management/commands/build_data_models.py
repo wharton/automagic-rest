@@ -32,6 +32,7 @@ COLUMN_FIELD_MAP = {
     "character varying": "TextField({}blank=True, null=True{})",
     "text": "TextField({}blank=True, null=True{})",
     "uuid": "UUIDField({}blank=True, null=True{})",
+    "interval": "DurationField({}blank=True, null=True{})",
 }
 
 # Created a reserved words list that can not be used for Django field
