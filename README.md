@@ -152,39 +152,7 @@ After running the build command, you should have a directory created that you de
 
 ## Release Notes
 
-### 0.2.4
-
-* Support for DRF version 3.11 (`base_name` must become `basename` in routes). Must use at least DRF version 3.9.
-
-### 0.2.3
-
-* Add support for `oid` field types in the field mapping. Last version to support DRF versions before 3.9.
-
-### 0.2.2
-
-* Ensure defaults for field type `NUMERIC` populate.
-
-### 0.2.1
-
-* Pull the reserved word list from Python dynamically.
-
-### 0.2.0
-
-* Refactored to use a generic serializer created on the fly. This is potentially a breaking change if you overrode the `get_serializer` method of the `build_data_models` command.
-    * This has been replaced by a view method called `get_serializer_class_name`.
-    * The serializer is now built on-the-fly rather than by the code generator.
-
-### 0.1.2
-
-* Add support for `DecimalField` with `max_digits` and `decimal_places` from `information_schema.columns` fields.
-
-### 0.1.1
-
-* Switched to naming models and serializers with a combination of `schema_name` and `table_name` to avoid model naming conflicts in Django if the same table exists across multiple schemata.
-
-### 0.1.0
-
-* Initial release.
+[Available on GitHub.](https://github.com/wharton/automagic-rest/releases)
 
 ## Maintainer
 
