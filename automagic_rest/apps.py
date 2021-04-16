@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class NlpConfig(AppConfig):
-    name = "nlp"
+class AutomagicRestConfig(AppConfig):
+    name = 'automagic_rest'
