@@ -166,7 +166,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         If overridden, this method returns the number of rows in a query planner
         estimate count which will cause estimated row counts to be used instead
-        of the (much) slowed `SELECT COUNT(*)` method. We'll start at one million.
+        of the (much) slower `SELECT COUNT(*)` method. We'll start at one million.
         """
         return 999_999
 
