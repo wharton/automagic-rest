@@ -51,6 +51,9 @@ Methods are provided which can be overridden to customize the endpoint with your
 
 `get_allowed_schemata` (default: `None`): if set, returns a list of schemata in the database to be built. If `None`, selects all schemata for the specific user.
 
+`get_extra_sql` (default: `""`): if set, appends the SQL returned by this method to
+the information schema query. Useful for exclusions.
+
 `get_root_python_path` (default: `data_path`): a Python path where you would like to write the models, serializers, and routes. **IMPORTANT**: this path will be wiped and re-written every time the build command is run. It should be a dedicated directory with nothing else in it.
 
 `get_view` (default: `automagic_rest.views.GenericViewSet`): the view to use.
@@ -110,6 +113,16 @@ class Command(build_data_models.Command):
         allowed_schemata = ['my_data', 'public_data']
 
         return allowed_schemata
+    
+    def get_extra_sql(self):
+        """
+        Returns SQL to append to the information schema query.
+
+        In this example, we exclude any tables ending in "_old".
+        """
+        return """
+            AND c.table_name NOT LIKE '%%_old'
+        """
 ```
 
 ### class views.GenericViewSet
