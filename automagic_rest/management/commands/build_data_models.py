@@ -153,13 +153,13 @@ class Command(BaseCommand):
         """
         return sub("[^0-9a-zA-Z]+", "_", identifier)
 
-    def metadata_sql(self, allowed_schemata_sql):
+    def metadata_sql(self, allowed_schemata_sql, extra_sql):
         """
         Returns the SQL to pull the introspection metadata.
         """
         return f"""
-            SELECT s.schema_name, c.table_name, c.column_name, c.data_type, c.character_maximum_length,
-            c.numeric_precision, c.numeric_scale
+            SELECT s.schema_name, c.table_name, c.column_name, c.data_type,
+            c.character_maximum_length, c.numeric_precision, c.numeric_scale
 
             FROM information_schema.schemata s
 
@@ -167,8 +167,8 @@ class Command(BaseCommand):
             ON s.schema_name = c.table_schema
 
             WHERE s.schema_owner = %(schema_owner)s
-            AND c.table_name NOT LIKE '%%chars'
             {allowed_schemata_sql}
+            {extra_sql}
 
             ORDER BY s.schema_name, c.table_name, c.column_name
         """
@@ -193,6 +193,13 @@ class Command(BaseCommand):
 
         return allowed_schemata_sql
 
+    def get_extra_sql(self):
+        """
+        Blank stub which allows adding extra SQL to the query against the information
+        schema.
+        """
+        return ""
+
     def get_owner(self, options):
         """
         Returns the PostgreSQL DB user that owns the schemata to be
@@ -205,8 +212,9 @@ class Command(BaseCommand):
 
         allowed_schemata = self.get_allowed_schemata(options, cursor)
         allowed_schemata_sql = self.get_allowed_schemata_sql(allowed_schemata)
+        extra_sql = self.get_extra_sql()
 
-        sql = self.metadata_sql(allowed_schemata_sql)
+        sql = self.metadata_sql(allowed_schemata_sql, extra_sql)
         cursor.execute(sql, {"schema_owner": owner})
 
         rows = fetch_result_with_blank_row(cursor)

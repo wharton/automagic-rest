@@ -99,6 +99,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
                     # Add column to filterable fields with all search options
                     self.filter_fields[field.name] = [
                         "exact",
+                        "in",
                         "contains",
                         "startswith",
                         "endswith",
