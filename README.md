@@ -2,7 +2,7 @@
 
 [![pypi](https://img.shields.io/pypi/v/automagic-rest.svg)](https://pypi.python.org/pypi/automagic-rest/)
 
-Automagic REST automatically builds a full Django app as a Django REST Framework read-only environment for a set of tables in a PostgreSQL database.
+Automagic REST is a code generator which builds a full Django app as a Django REST Framework read-only environment for a set of tables in a PostgreSQL database.
 
 This is very much for a specific niche, but we have found it quite powerful for building a RESTful API on top of datasets we receive from other sources through introspection of PostgreSQL's `information_schema`.
 
@@ -145,7 +145,7 @@ To follow on the example above, here is an example of an overridden view, which 
 
 ```python
 from rest_framework.permissions import IsAuthenticated
-from drf_renderer_xlsx.mixins import XLSXFileMixin
+from drf_excel.mixins import XLSXFileMixin
 
 class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
     """
@@ -165,7 +165,7 @@ After running the build command, you should have a directory created that you de
 
 ## Release Notes
 
-[Available on GitHub.](https://github.com/wharton/automagic-rest/releases)
+[Available on GitHub](https://github.com/wharton/automagic-rest/releases)
 
 ## Maintainer
 
