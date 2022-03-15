@@ -26,8 +26,7 @@ def split_basename(basename):
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
-    """
-    """
+    """"""
 
     """
     A generic viewset which imports the necessary model, serializer, and permission
@@ -46,9 +45,12 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.db_name, self.python_path_name, self.schema_name, self.table_name = split_basename(
-            self.basename
-        )
+        (
+            self.db_name,
+            self.python_path_name,
+            self.schema_name,
+            self.table_name,
+        ) = split_basename(self.basename)
 
         self.model = getattr(
             import_module(f"{self.python_path_name}.models.{self.schema_name}"),
@@ -91,7 +93,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
                 field_type = field.get_internal_type()
                 if field_type in ("CharField", "TextField"):
                     # Add column to searchable fields, with 'starts with' search ('^')
-                    # See: http://www.django-rest-framework.org/api-guide/filtering/#searchfilter
+                    # See: http://www.django-rest-framework.org/api-guide/filtering/#searchfilter  # noqa
                     self.search_fields.append(f"^{field.name}")
 
                     # Add column to filterable fields with all search options
@@ -109,10 +111,24 @@ class GenericViewSet(ReadOnlyModelViewSet):
                     "FloatField",
                 ):
                     # Add column to filterable fields with all search options
-                    self.filter_fields[field.name] = ["exact", "in", "lt", "lte", "gt", "gte"]
+                    self.filter_fields[field.name] = [
+                        "exact",
+                        "in",
+                        "lt",
+                        "lte",
+                        "gt",
+                        "gte",
+                    ]
                 elif field_type in ("DateField", "DateTimeField", "TimeField"):
                     # Add column to filterable fields with all search options
-                    self.filter_fields[field.name] = ["exact", "in", "lt", "lte", "gt", "gte"]
+                    self.filter_fields[field.name] = [
+                        "exact",
+                        "in",
+                        "lt",
+                        "lte",
+                        "gt",
+                        "gte",
+                    ]
 
         self.search_fields = tuple(self.search_fields)
 
@@ -157,6 +173,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
             """
             Placeholder for the serializer we will create dynamically below.
             """
+
             class Meta:
                 model = self.model
                 fields = "__all__"
@@ -187,7 +204,8 @@ class GenericViewSet(ReadOnlyModelViewSet):
         cursor = connections[self.db_name].cursor()
 
         cursor.execute(
-            self.index_sql, {"schema_name": self.schema_name, "table_name": self.table_name}
+            self.index_sql,
+            {"schema_name": self.schema_name, "table_name": self.table_name},
         )
 
         rows = cursor.fetchall()
