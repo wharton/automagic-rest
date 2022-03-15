@@ -163,17 +163,13 @@ class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
 
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
 
-## Release Notes
+## Release Notes and Contributors
 
-[Available on GitHub](https://github.com/wharton/automagic-rest/releases)
-
+* [Release notes](https://github.com/wharton/automagic-rest/releases)
+* [Our wonderful contributors](https://github.com/wharton/automagic-rest/graphs/contributors)
 ## Maintainer
 
 * [Timothy Allen](https://github.com/FlipperPA) at [The Wharton School](https://github.com/wharton)
 
 This package is maintained by the staff of [Wharton Research Data Services](https://wrds.wharton.upenn.edu/). We are thrilled that [The Wharton School](https://www.wharton.upenn.edu/) allows us a certain amount of time to contribute to open-source projects. We add features as they are necessary for our projects, and try to keep up with Issues and Pull Requests as best we can. Due to constraints of time (our full time jobs!), Feature Requests without a Pull Request may not be implemented, but we are always open to new ideas and grateful for contributions and our package users.
 
-## Contributors (Thank You!)
-
-* [Alex Malek](https://github.com/amalek215)
-* [Andreu Vallbona Plazas](https://github.com/avallbona)
