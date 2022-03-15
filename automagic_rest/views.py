@@ -26,7 +26,7 @@ def split_basename(basename):
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
-    """"""
+    """"""  # Supress this docstring from the DRF HTML browsable interface
 
     """
     A generic viewset which imports the necessary model, serializer, and permission
