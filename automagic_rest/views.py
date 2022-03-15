@@ -68,7 +68,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         if api_permission:
             self.permission_classes = (api_permission,)
 
-        self.filter_backends = (OrderingFilter, SearchFilter)
+        self.filter_backends = [OrderingFilter, SearchFilter]
         self.ordering_fields = "__all__"
         self.search_fields = []
 
@@ -79,10 +79,8 @@ class GenericViewSet(ReadOnlyModelViewSet):
         # If any columns are indexed, add the appropriate filter backends
         # and set up a dictionary of filter fields
         if len(index_columns):
-            self.filter_backends = self.filter_backends + (
-                RestFrameworkFilterBackend,
-                ComplexFilterBackend,
-            )
+            if RestFrameworkFilterBackend not in self.filter_backends:
+                self.filter_backends += [RestFrameworkFilterBackend]
             self.filter_fields = {}
 
         # Loop through all of the fields. If the field is indexed, add it
@@ -111,10 +109,10 @@ class GenericViewSet(ReadOnlyModelViewSet):
                     "FloatField",
                 ):
                     # Add column to filterable fields with all search options
-                    self.filter_fields[field.name] = ["exact", "lt", "lte", "gt", "gte"]
+                    self.filter_fields[field.name] = ["exact", "in", "lt", "lte", "gt", "gte"]
                 elif field_type in ("DateField", "DateTimeField", "TimeField"):
                     # Add column to filterable fields with all search options
-                    self.filter_fields[field.name] = ["exact", "lt", "lte", "gt", "gte"]
+                    self.filter_fields[field.name] = ["exact", "in", "lt", "lte", "gt", "gte"]
 
         self.search_fields = tuple(self.search_fields)
 
@@ -122,7 +120,16 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         Use the db_name set when the API is built.
         """
+        # If we're using the ComplexFilterBackend, it supercedes the
+        # RestFrameworkFilterBackend; trigger from the URL parameter.
+        if "filters" in self.request.query_params:
+            if ComplexFilterBackend not in self.filter_backends:
+                self.filter_backends += [ComplexFilterBackend]
+            if RestFrameworkFilterBackend in self.filter_backends:
+                self.filter_backends.remove(RestFrameworkFilterBackend)
+
         queryset = self.model.objects.using(self.db_name).all()
+
         return queryset
 
     def get_serializer_class_name(self):
