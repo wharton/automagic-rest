@@ -163,6 +163,10 @@ class MyGenericViewSet(XLSXFileMixin, GenericViewSet):
 
 After running the build command, you should have a directory created that you defined as `path` (or overrode with `get_root_python_path()`) that contains models, serializers, and a `urls.py` file. Include the `urls.py` file with a route from your Django project, and you should be able to visit the Django REST Framework browsable API.
 
+## Known Issues
+
+* Certain column types are not supported, such as `ts_vector` and others that don't map cleanly to a RESTful type.
+
 ## Release Notes and Contributors
 
 * [Release notes](https://github.com/wharton/automagic-rest/releases)

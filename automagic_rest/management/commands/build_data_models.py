@@ -33,6 +33,8 @@ COLUMN_FIELD_MAP = {
     "text": "TextField({}blank=True, null=True{})",
     "uuid": "UUIDField({}blank=True, null=True{})",
     "interval": "DurationField({}blank=True, null=True{})",
+    "json": "JSONField({}blank=True, null=True{})",
+    "jsonb": "JSONField({}blank=True, null=True{})",
 }
 
 # Created a reserved words list that can not be used for Django field
@@ -322,17 +324,23 @@ class Command(BaseCommand):
 
                 db_column += f", max_digits={max_digits}, decimal_places={decimal_places}"
 
-            if primary_key_has_been_set:
-                field_map = COLUMN_FIELD_MAP[row.data_type].format("", db_column)
+            if row.data_type in COLUMN_FIELD_MAP:
+                if primary_key_has_been_set:
+                    field_map = COLUMN_FIELD_MAP[row.data_type].format("", db_column)
+                else:
+                    # We'll make the first column the primary key, since once is required in the Django ORM
+                    # and this is read-only. Primary keys can not be set to NULL in Django.
+                    field_map = (
+                        COLUMN_FIELD_MAP[row.data_type]
+                        .format("primary_key=True", db_column)
+                        .replace("blank=True, null=True", "")
+                    )
+                    primary_key_has_been_set = True
             else:
-                # We'll make the first column the primary key, since once is required in the Django ORM
-                # and this is read-only. Primary keys can not be set to NULL in Django.
-                field_map = (
-                    COLUMN_FIELD_MAP[row.data_type]
-                    .format("primary_key=True", db_column)
-                    .replace("blank=True, null=True", "")
+                print(
+                    f"WARNING: skipping column {row.column_name} of unknown data type "
+                    f"{row.data_type}."
                 )
-                primary_key_has_been_set = True
 
             context["tables"][row.table_name].append(
                 f"""{column_name} = models.{field_map}"""
