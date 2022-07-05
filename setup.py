@@ -19,6 +19,7 @@ setup(
     install_requires=[
         "djangorestframework>=3.9",
         "djangorestframework-filters==1.0.0.dev2",
+        "django-filter==21.1",  # last release to support DRF-filters 1.0.0.dev2
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -35,7 +36,6 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3 :: Only",
         "Framework :: Django",
-        "Framework :: Django :: 2.2",
         "Framework :: Django :: 3",
         "Framework :: Django :: 4",
         "Topic :: Internet :: WWW/HTTP",
