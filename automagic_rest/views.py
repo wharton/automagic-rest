@@ -128,6 +128,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
                         "lte",
                         "gt",
                         "gte",
+                        "range"
                     ]
 
         self.search_fields = tuple(self.search_fields)
