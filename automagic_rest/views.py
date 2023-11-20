@@ -74,6 +74,9 @@ class GenericViewSet(ReadOnlyModelViewSet):
         self.ordering_fields = "__all__"
         self.search_fields = []
 
+        # Create a dictionary of key column names and values as their position
+        self.positions = self.get_positions()
+
         # Add any columns indexed in the PostgreSQL database to be
         # filterable columns in the API
         index_columns = self.get_indexes()
@@ -217,3 +220,28 @@ class GenericViewSet(ReadOnlyModelViewSet):
             index_columns.append(row[0])
 
         return index_columns
+
+    def get_positions(self):
+        """
+        Return a dict of keyed column names and their ordinal positions as values.
+        """
+
+        positions = {}
+
+        cursor = connections[self.db_name].cursor()
+
+        cursor.execute(
+            """
+            SELECT column_name, ordinal_position
+            FROM information_schema.columns
+            WHERE table_schema = %(table_schema)s
+            AND table_name = %(table_name)s
+            """,
+            {"table_schema": self.schema_name, "table_name": self.table_name},
+        )
+
+        for row in cursor.fetchall():
+            # 0 = column_name, 1 = ordinal_position
+            positions[row[0]] = row[1]
+
+        return positions
