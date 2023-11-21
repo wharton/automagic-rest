@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=67", "setuptools_scm>=7", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "automagic-rest/_version.py"
+
+[project]
+name = "automagic-rest"
+authors = [{name = "Tim Allen", email = "flipper@peregrinesalon.com"},]
+description = "Automagic REST: Django REST Framework Code Generator for Underlying PostgreSQL DBs"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["django", "automagic-rest", "rest", "drf", "django-rest-framework", "djangorestframework"]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Django",
+    "Framework :: Django :: 4",
+    "Framework :: Django :: 5",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    "djangorestframework>=3.9",
+    "djangorestframework-filters==1.0.0.dev2",
+    "django-filter==21.1",  # last release to support DRF-filters 1.0.0.dev2
+]
+dynamic = ["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/wharton/automagic-rest"
+"Repository" = "https://github.com/wharton/automagic-rest"
+"Documentation" = "https://github.com/wharton/automagic-rest"
