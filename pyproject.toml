@@ -28,7 +28,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Framework :: Django",
     "Framework :: Django :: 4",
-    "Framework :: Django :: 5",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
