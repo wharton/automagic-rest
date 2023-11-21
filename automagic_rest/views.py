@@ -1,9 +1,8 @@
 from importlib import import_module
 
 from django.db import connections
-
-from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.viewsets import ReadOnlyModelViewSet
 from rest_framework_filters.backends import (
     ComplexFilterBackend,
     RestFrameworkFilterBackend,
@@ -56,16 +55,12 @@ class GenericViewSet(ReadOnlyModelViewSet):
             import_module(f"{self.python_path_name}.models.{self.schema_name}"),
             f"{self.schema_name}_{self.table_name}_model",
         )
+
+        if pagination_class := self.get_pagination_class():
+            # Only override pagination if provided.
+            self.pagination_class = pagination_class
+
         api_permission = self.get_permission()
-
-        # Grab the estimated count from the query plan; if its a large table,
-        # use the count estimate for Pagination instead of an exact count.
-        table_estimate_count = estimate_count(
-            self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
-        )
-        if table_estimate_count > self.get_estimate_count_limit():
-            self.pagination_class = CountEstimatePagination
-
         # Only override permissions if provided.
         if api_permission:
             self.permission_classes = (api_permission,)
@@ -135,6 +130,19 @@ class GenericViewSet(ReadOnlyModelViewSet):
                     ]
 
         self.search_fields = tuple(self.search_fields)
+
+    def get_pagination_class(self):
+        """
+        Grab the estimated count from the query plan; if its a large table,
+        use the count estimate for Pagination instead of an exact count.
+        :return: CountEstimatePagination if the table is large, otherwise None
+        """
+        table_estimate_count = estimate_count(
+            self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
+        )
+        if table_estimate_count > self.get_estimate_count_limit():
+            return CountEstimatePagination
+        return None
 
     def get_queryset(self):
         """

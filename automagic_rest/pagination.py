@@ -1,7 +1,6 @@
 import re
 
 from django.db import connections
-
 from rest_framework.pagination import LimitOffsetPagination
 
 
@@ -43,17 +42,5 @@ class CountEstimatePagination(LimitOffsetPagination):
     PostgreSQL query plan, eliminating the long wait time for `SELECT COUNT(*)`.
     """
 
-    def paginate_queryset(self, queryset, request, view=None):
-        self.count = parse_explain(queryset.explain())
-        self.limit = self.get_limit(request)
-        if self.limit is None:
-            return None
-
-        self.offset = self.get_offset(request)
-        self.request = request
-        if self.count > self.limit and self.template is not None:
-            self.display_page_controls = True
-
-        if self.count == 0 or self.offset > self.count:
-            return []
-        return list(queryset[self.offset : self.offset + self.limit])
+    def get_count(self, queryset):
+        return parse_explain(queryset.explain())
