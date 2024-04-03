@@ -9,7 +9,7 @@ from rest_framework_filters.backends import (
 )
 
 from .pagination import estimate_count, CountEstimatePagination
-from .settings import get_reserved_words
+from .settings import get_reserved_words_to_append_underscore
 
 
 def split_basename(basename):
@@ -235,7 +235,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         Return a dict of keyed column names and their ordinal positions as values.
         """
 
-        RESERVED_WORDS = get_reserved_words()
+        RESERVED_WORDS = get_reserved_words_to_append_underscore()
         positions = {}
 
         cursor = connections[self.db_name].cursor()

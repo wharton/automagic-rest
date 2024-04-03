@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db import connections
 from django.template.loader import render_to_string
 
-from automagic_rest.settings import get_reserved_words
+from automagic_rest.settings import get_reserved_words_to_append_underscore
 
 # Map PostgreSQL column types to Django ORM field type
 # Please note: "blank=True, null=True" must be typed
@@ -39,7 +39,7 @@ COLUMN_FIELD_MAP = {
 }
 
 # Words that can't be used as column names
-RESERVED_WORDS = get_reserved_words()
+RESERVED_WORDS = get_reserved_words_to_append_underscore()
 
 
 def fetch_result_with_blank_row(cursor):
@@ -75,7 +75,10 @@ class Command(BaseCommand):
             action="store",
             dest="owner",
             default="my_pg_user",
-            help='Select schemata from this PostgreSQL owner user. Defaults to the "wrdsadmn" owner.',
+            help=(
+                'Select schemata from this PostgreSQL owner user. Defaults to the '
+                '"wrdsadmn" owner.'
+            ),
         )
         parser.add_argument(
             "--path",
@@ -89,7 +92,10 @@ class Command(BaseCommand):
             action="store_true",
             dest="verbose",
             default=False,
-            help="""Sets verbose mode; displays each model built, instead of just schemata.""",
+            help=(
+                "Sets verbose mode; displays each model built, instead of just "
+                "schemata."
+            ),
         )
 
     def get_db(self, options):
