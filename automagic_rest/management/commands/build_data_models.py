@@ -38,7 +38,7 @@ COLUMN_FIELD_MAP = {
     "jsonb": "JSONField({}blank=True, null=True{})",
 }
 
-# Words that can't be used as column  names
+# Words that can't be used as column names
 RESERVED_WORDS = get_reserved_words()
 
 

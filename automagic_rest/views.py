@@ -235,10 +235,10 @@ class GenericViewSet(ReadOnlyModelViewSet):
         Return a dict of keyed column names and their ordinal positions as values.
         """
 
+        RESERVED_WORDS = get_reserved_words()
         positions = {}
 
         cursor = connections[self.db_name].cursor()
-
         cursor.execute(
             """
             SELECT column_name, ordinal_position
@@ -251,6 +251,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         for row in cursor.fetchall():
             # 0 = column_name, 1 = ordinal_position
-            positions[row[0]] = row[1]
+            column_name = f"{row[0]}_" if row[0] in RESERVED_WORDS else row[0]
+            positions[column_name] = row[1]
 
         return positions
