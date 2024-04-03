@@ -48,7 +48,9 @@ def fetch_result_with_blank_row(cursor):
     model and column are written in the loop.
     """
     results = cursor.fetchall()
-    results.append(("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__", 0, 0))
+    results.append(
+        ("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__", 0, 0)
+    )
     desc = cursor.description
     nt_result = namedtuple("Result", [col[0] for col in desc])
 
@@ -239,7 +241,7 @@ class Command(BaseCommand):
         with open(
             f"""{root_path}/models/{context["schema_name"]}.py""", "w"
         ) as f:
-            output = render_to_string(f"automagic_rest/models.html", context)
+            output = render_to_string("automagic_rest/models.html", context)
             f.write(output)
 
     def handle(self, *args, **options):
@@ -318,14 +320,17 @@ class Command(BaseCommand):
                 if decimal_places is None:
                     decimal_places = decimal_places_default
 
-                db_column += f", max_digits={max_digits}, decimal_places={decimal_places}"
+                db_column += (
+                    f", max_digits={max_digits}, decimal_places={decimal_places}"
+                )
 
             if row.data_type in COLUMN_FIELD_MAP:
                 if primary_key_has_been_set:
                     field_map = COLUMN_FIELD_MAP[row.data_type].format("", db_column)
                 else:
-                    # We'll make the first column the primary key, since once is required in the Django ORM
-                    # and this is read-only. Primary keys can not be set to NULL in Django.
+                    # We'll make the first column the primary key, since once is
+                    # required in the Django ORM and this is read-only. Primary keys can
+                    # not be set to NULL in Django.
                     field_map = (
                         COLUMN_FIELD_MAP[row.data_type]
                         .format("primary_key=True", db_column)
@@ -345,5 +350,5 @@ class Command(BaseCommand):
         # Pop off the final false row, and write the URLs file.
         context["routes"].pop()
         with open(f"{root_path}/urls.py", "w") as f:
-            output = render_to_string(f"automagic_rest/urls.html", context)
+            output = render_to_string("automagic_rest/urls.html", context)
             f.write(output)
