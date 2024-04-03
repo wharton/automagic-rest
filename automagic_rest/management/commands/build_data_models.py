@@ -1,13 +1,14 @@
 from collections import namedtuple
 
 from glob import glob
-import keyword
 import os
 from re import sub
 
 from django.core.management.base import BaseCommand
 from django.db import connections
 from django.template.loader import render_to_string
+
+from automagic_rest.settings import get_reserved_words
 
 # Map PostgreSQL column types to Django ORM field type
 # Please note: "blank=True, null=True" must be typed
@@ -37,15 +38,8 @@ COLUMN_FIELD_MAP = {
     "jsonb": "JSONField({}blank=True, null=True{})",
 }
 
-# Created a reserved words list that can not be used for Django field
-# names. Start with the Python reserved words list, and add any additional
-# fields reserved by DRF or Automagic REST.
-# We will then append `_var` to any fields with these names, and map to
-# the underlying database column in the models.
-RESERVED_WORDS = keyword.kwlist
-
-# Additional reserved words for Django REST Framework
-RESERVED_WORDS.append("format")
+# Words that can't be used as column  names
+RESERVED_WORDS = get_reserved_words()
 
 
 def fetch_result_with_blank_row(cursor):
@@ -301,12 +295,8 @@ class Command(BaseCommand):
 
             # If the column name is a Python reserved word, append an underscore
             # to follow the Python convention
-            if row.column_name in RESERVED_WORDS or row.column_name.endswith("_"):
-                if row.column_name.endswith("_"):
-                    under_score = ""
-                else:
-                    under_score = "_"
-                column_name = "{}{}var".format(row.column_name, under_score)
+            if row.column_name in RESERVED_WORDS:
+                column_name = f"{row.column_name}_"
                 db_column = ", db_column='{}'".format(row.column_name)
             else:
                 column_name = row.column_name
