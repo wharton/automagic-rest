@@ -1,13 +1,14 @@
 from collections import namedtuple
 
 from glob import glob
-import keyword
 import os
 from re import sub
 
 from django.core.management.base import BaseCommand
 from django.db import connections
 from django.template.loader import render_to_string
+
+from automagic_rest.settings import get_reserved_words_to_append_underscore
 
 # Map PostgreSQL column types to Django ORM field type
 # Please note: "blank=True, null=True" must be typed
@@ -37,15 +38,8 @@ COLUMN_FIELD_MAP = {
     "jsonb": "JSONField({}blank=True, null=True{})",
 }
 
-# Created a reserved words list that can not be used for Django field
-# names. Start with the Python reserved words list, and add any additional
-# fields reserved by DRF or Automagic REST.
-# We will then append `_var` to any fields with these names, and map to
-# the underlying database column in the models.
-RESERVED_WORDS = keyword.kwlist
-
-# Additional reserved words for Django REST Framework
-RESERVED_WORDS.append("format")
+# Words that can't be used as column names
+RESERVED_WORDS = get_reserved_words_to_append_underscore()
 
 
 def fetch_result_with_blank_row(cursor):
@@ -54,7 +48,9 @@ def fetch_result_with_blank_row(cursor):
     model and column are written in the loop.
     """
     results = cursor.fetchall()
-    results.append(("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__", 0, 0))
+    results.append(
+        ("__BLANK__", "__BLANK__", "__BLANK__", "integer", "__BLANK__", 0, 0)
+    )
     desc = cursor.description
     nt_result = namedtuple("Result", [col[0] for col in desc])
 
@@ -81,7 +77,10 @@ class Command(BaseCommand):
             action="store",
             dest="owner",
             default="my_pg_user",
-            help='Select schemata from this PostgreSQL owner user. Defaults to the "wrdsadmn" owner.',
+            help=(
+                'Select schemata from this PostgreSQL owner user. Defaults to the '
+                '"wrdsadmn" owner.'
+            ),
         )
         parser.add_argument(
             "--path",
@@ -95,7 +94,10 @@ class Command(BaseCommand):
             action="store_true",
             dest="verbose",
             default=False,
-            help="""Sets verbose mode; displays each model built, instead of just schemata.""",
+            help=(
+                "Sets verbose mode; displays each model built, instead of just "
+                "schemata."
+            ),
         )
 
     def get_db(self, options):
@@ -239,7 +241,7 @@ class Command(BaseCommand):
         with open(
             f"""{root_path}/models/{context["schema_name"]}.py""", "w"
         ) as f:
-            output = render_to_string(f"automagic_rest/models.html", context)
+            output = render_to_string("automagic_rest/models.html", context)
             f.write(output)
 
     def handle(self, *args, **options):
@@ -301,12 +303,8 @@ class Command(BaseCommand):
 
             # If the column name is a Python reserved word, append an underscore
             # to follow the Python convention
-            if row.column_name in RESERVED_WORDS or row.column_name.endswith("_"):
-                if row.column_name.endswith("_"):
-                    under_score = ""
-                else:
-                    under_score = "_"
-                column_name = "{}{}var".format(row.column_name, under_score)
+            if row.column_name in RESERVED_WORDS:
+                column_name = f"{row.column_name}_"
                 db_column = ", db_column='{}'".format(row.column_name)
             else:
                 column_name = row.column_name
@@ -322,14 +320,17 @@ class Command(BaseCommand):
                 if decimal_places is None:
                     decimal_places = decimal_places_default
 
-                db_column += f", max_digits={max_digits}, decimal_places={decimal_places}"
+                db_column += (
+                    f", max_digits={max_digits}, decimal_places={decimal_places}"
+                )
 
             if row.data_type in COLUMN_FIELD_MAP:
                 if primary_key_has_been_set:
                     field_map = COLUMN_FIELD_MAP[row.data_type].format("", db_column)
                 else:
-                    # We'll make the first column the primary key, since once is required in the Django ORM
-                    # and this is read-only. Primary keys can not be set to NULL in Django.
+                    # We'll make the first column the primary key, since once is
+                    # required in the Django ORM and this is read-only. Primary keys can
+                    # not be set to NULL in Django.
                     field_map = (
                         COLUMN_FIELD_MAP[row.data_type]
                         .format("primary_key=True", db_column)
@@ -349,5 +350,5 @@ class Command(BaseCommand):
         # Pop off the final false row, and write the URLs file.
         context["routes"].pop()
         with open(f"{root_path}/urls.py", "w") as f:
-            output = render_to_string(f"automagic_rest/urls.html", context)
+            output = render_to_string("automagic_rest/urls.html", context)
             f.write(output)
