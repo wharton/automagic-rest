@@ -1,7 +1,7 @@
 import keyword
 
 
-def get_reserved_words():
+def get_reserved_words_to_append_underscore():
     """
     A list of reserved words list that can not be used for Django field names. This
     includes the Python reserved words list, and additional fields not allowed by
