@@ -233,19 +233,18 @@ class GenericViewSet(ReadOnlyModelViewSet):
         by providing schema name and table name.
         """
 
-        cursor = connections[self.db_name].cursor()
+        index_columns = []
 
+        cursor = connections[self.db_name].cursor()
         cursor.execute(
             self.index_sql,
             {"schema_name": self.schema_name, "table_name": self.table_name},
         )
-
         rows = cursor.fetchall()
 
-        index_columns = []
-
         for row in rows:
-            index_columns.append(row[0])
+            column_name, _ = reserved_word_check(row[0])
+            index_columns.append(column_name)
 
         return index_columns
 
@@ -269,7 +268,6 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         for row in cursor.fetchall():
             column_name, _ = reserved_word_check(row[0])
-
-        positions[column_name] = row[1]
+            positions[column_name] = row[1]
 
         return positions
