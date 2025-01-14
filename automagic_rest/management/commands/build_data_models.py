@@ -9,6 +9,7 @@ from django.db import connections
 from django.template.loader import render_to_string
 
 from automagic_rest.settings import get_reserved_words_to_append_underscore
+from automagic_rest.views import reserved_word_check
 
 # Map PostgreSQL column types to Django ORM field type
 # Please note: "blank=True, null=True" must be typed
@@ -303,12 +304,11 @@ class Command(BaseCommand):
 
             # If the column name is a Python reserved word, append an underscore
             # to follow the Python convention
-            if row.column_name in RESERVED_WORDS:
-                column_name = f"{row.column_name}_"
+            column_name, changed = reserved_word_check(row.column_name)
+            db_column = ""
+
+            if changed:
                 db_column = ", db_column='{}'".format(row.column_name)
-            else:
-                column_name = row.column_name
-                db_column = ""
 
             # For decimals, add the max_length and decimal places
             if row.data_type == "numeric":

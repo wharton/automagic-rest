@@ -171,6 +171,7 @@ After running the build command, you should have a directory created that you de
 
 * [Release notes](https://github.com/wharton/automagic-rest/releases)
 * [Our wonderful contributors](https://github.com/wharton/automagic-rest/graphs/contributors)
+
 ## Maintainer
 
 * [Timothy Allen](https://github.com/FlipperPA) at [The Wharton School](https://github.com/wharton)

@@ -12,6 +12,8 @@ from .pagination import estimate_count, CountEstimatePagination
 from .settings import get_reserved_words_to_append_underscore
 
 
+RESERVED_WORDS = get_reserved_words_to_append_underscore()
+
 def split_basename(basename):
     """
     Splits a base name into schema and table names.
@@ -23,6 +25,22 @@ def split_basename(basename):
     table_name = parts[3]
 
     return db_name, python_path_name, schema_name, table_name
+
+
+def reserved_word_check(column_name):
+    """
+    Python RESERVED_WORDS are appended with `_var`, and columns ending with `_`
+    are appended with `var` to avoid conflicts with URL double underscores.
+    """
+    changed = False
+    if column_name in RESERVED_WORDS:
+        column_name = f"{column_name}_var"
+        changed = True
+    elif column_name.endswith("_"):
+        column_name = f"{column_name}var"
+        changed = True
+    
+    return column_name, changed
 
 
 class GenericViewSet(ReadOnlyModelViewSet):
@@ -235,7 +253,6 @@ class GenericViewSet(ReadOnlyModelViewSet):
         Return a dict of keyed column names and their ordinal positions as values.
         """
 
-        RESERVED_WORDS = get_reserved_words_to_append_underscore()
         positions = {}
 
         cursor = connections[self.db_name].cursor()
@@ -250,8 +267,8 @@ class GenericViewSet(ReadOnlyModelViewSet):
         )
 
         for row in cursor.fetchall():
-            # 0 = column_name, 1 = ordinal_position
-            column_name = f"{row[0]}_" if row[0] in RESERVED_WORDS else row[0]
-            positions[column_name] = row[1]
+            column_name, _ = reserved_word_check(row[0])
+
+        positions[column_name] = row[1]
 
         return positions
