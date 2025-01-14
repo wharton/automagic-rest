@@ -79,8 +79,8 @@ class Command(BaseCommand):
             dest="owner",
             default="my_pg_user",
             help=(
-                'Select schemata from this PostgreSQL owner user. Defaults to the '
-                '"wrdsadmn" owner.'
+                "Select schemata from this PostgreSQL owner user. Defaults to the "
+                '"my_pg_user" owner.'
             ),
         )
         parser.add_argument(
@@ -239,9 +239,7 @@ class Command(BaseCommand):
         """
         Write out the current schema model.
         """
-        with open(
-            f"""{root_path}/models/{context["schema_name"]}.py""", "w"
-        ) as f:
+        with open(f"""{root_path}/models/{context["schema_name"]}.py""", "w") as f:
             output = render_to_string("automagic_rest/models.html", context)
             f.write(output)
 

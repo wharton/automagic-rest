@@ -14,6 +14,7 @@ from .settings import get_reserved_words_to_append_underscore
 
 RESERVED_WORDS = get_reserved_words_to_append_underscore()
 
+
 def split_basename(basename):
     """
     Splits a base name into schema and table names.
@@ -39,7 +40,7 @@ def reserved_word_check(column_name):
     elif column_name.endswith("_"):
         column_name = f"{column_name}var"
         changed = True
-    
+
     return column_name, changed
 
 
@@ -145,7 +146,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
                         "lte",
                         "gt",
                         "gte",
-                        "range"
+                        "range",
                     ]
 
         self.search_fields = tuple(self.search_fields)
