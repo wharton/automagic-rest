@@ -125,6 +125,13 @@ class Command(build_data_models.Command):
         """
 ```
 
+### Python Reserved Words and Underscores
+
+`AUTOMAGIC_REST_RESERVED_WORD_SUFFIX` is an available Django setting, defaulting to `var`. Make sure this value does not end in an underscore, or it will circumvent the fix. Python reserved words and fields ending in an underscore will have an underscore and this value appended to their Django model field name:
+
+* Python reserved words example: `for` -> `for_var`
+* Columns ending in an underscore example: `date_` -> `date__var`.
+
 ### class views.GenericViewSet
 
 The view has several methods and attributes which can be overridden as well.

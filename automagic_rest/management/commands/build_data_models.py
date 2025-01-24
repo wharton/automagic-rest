@@ -8,7 +8,6 @@ from django.core.management.base import BaseCommand
 from django.db import connections
 from django.template.loader import render_to_string
 
-from automagic_rest.settings import get_reserved_words_to_append_underscore
 from automagic_rest.views import reserved_word_check
 
 # Map PostgreSQL column types to Django ORM field type
@@ -38,9 +37,6 @@ COLUMN_FIELD_MAP = {
     "json": "JSONField({}blank=True, null=True{})",
     "jsonb": "JSONField({}blank=True, null=True{})",
 }
-
-# Words that can't be used as column names
-RESERVED_WORDS = get_reserved_words_to_append_underscore()
 
 
 def fetch_result_with_blank_row(cursor):

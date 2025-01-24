@@ -9,10 +9,11 @@ from rest_framework_filters.backends import (
 )
 
 from .pagination import estimate_count, CountEstimatePagination
-from .settings import get_reserved_words_to_append_underscore
+from .settings import get_reserved_words_to_append_suffix, get_reserved_word_suffix
 
 
-RESERVED_WORDS = get_reserved_words_to_append_underscore()
+RESERVED_WORDS = get_reserved_words_to_append_suffix()
+RESERVED_WORD_SUFFIX = get_reserved_word_suffix()
 
 
 def split_basename(basename):
@@ -34,13 +35,13 @@ def reserved_word_check(column_name):
     are appended with `var` to avoid conflicts with URL double underscores.
     """
     changed = False
-    if column_name in RESERVED_WORDS:
-        column_name = f"{column_name}_var"
+    if (
+        column_name in RESERVED_WORDS
+        or (column_name.endswith("_") and column_name != "__BLANK__")
+    ):
+        column_name = f"{column_name}_{RESERVED_WORD_SUFFIX}"
         changed = True
-    elif column_name.endswith("_"):
-        column_name = f"{column_name}var"
-        changed = True
-
+    
     return column_name, changed
 
 
