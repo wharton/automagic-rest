@@ -39,7 +39,7 @@ def reserved_word_check(column_name):
         column_name in RESERVED_WORDS
         or (column_name.endswith("_") and column_name != "__BLANK__")
     ):
-        column_name = f"{column_name}_{RESERVED_WORD_SUFFIX}"
+        column_name = f"{column_name}{RESERVED_WORD_SUFFIX}"
         changed = True
     
     return column_name, changed
