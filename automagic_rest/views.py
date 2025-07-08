@@ -159,6 +159,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         """
         Grab the estimated count from the query plan; if its a large table,
         use the count estimate for Pagination instead of an exact count.
+        :param table_estimate_count: (Optional) Estimated number of rows in the table. If not provided, it will be calculated.
         :return: CountEstimatePagination if the table is large, otherwise None
         """
         if table_estimate_count is None:
