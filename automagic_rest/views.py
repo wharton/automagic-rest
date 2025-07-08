@@ -77,7 +77,10 @@ class GenericViewSet(ReadOnlyModelViewSet):
             f"{self.schema_name}_{self.table_name}_model",
         )
 
-        if pagination_class := self.get_pagination_class():
+        self.table_estimate_count = estimate_count(
+                self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
+            )
+        if pagination_class := self.get_pagination_class(self.table_estimate_count):
             # Only override pagination if provided.
             self.pagination_class = pagination_class
 
@@ -152,15 +155,16 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         self.search_fields = tuple(self.search_fields)
 
-    def get_pagination_class(self):
+    def get_pagination_class(self, table_estimate_count):
         """
         Grab the estimated count from the query plan; if its a large table,
         use the count estimate for Pagination instead of an exact count.
         :return: CountEstimatePagination if the table is large, otherwise None
         """
-        table_estimate_count = estimate_count(
-            self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
-        )
+        if not table_estimate_count:
+            table_estimate_count = estimate_count(
+                self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
+            )
         if table_estimate_count > self.get_estimate_count_limit():
             return CountEstimatePagination
         return None
