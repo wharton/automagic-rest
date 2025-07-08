@@ -155,7 +155,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
 
         self.search_fields = tuple(self.search_fields)
 
-    def get_pagination_class(self, table_estimate_count):
+    def get_pagination_class(self, table_estimate_count = None):
         """
         Grab the estimated count from the query plan; if its a large table,
         use the count estimate for Pagination instead of an exact count.
