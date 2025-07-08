@@ -161,7 +161,7 @@ class GenericViewSet(ReadOnlyModelViewSet):
         use the count estimate for Pagination instead of an exact count.
         :return: CountEstimatePagination if the table is large, otherwise None
         """
-        if not table_estimate_count:
+        if table_estimate_count is None:
             table_estimate_count = estimate_count(
                 self.db_name, f"SELECT * FROM {self.schema_name}.{self.table_name}"
             )
