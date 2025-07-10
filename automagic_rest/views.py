@@ -104,10 +104,19 @@ class GenericViewSet(ReadOnlyModelViewSet):
                 self.filter_backends += [RestFrameworkFilterBackend]
             self.filter_fields = {}
 
+        self.set_search_and_filter_fields_for_indexed_fields(self.model, index_columns)
+        self.search_fields = tuple(self.search_fields)
+
+    def set_search_and_filter_fields_for_indexed_fields(self, model, index_columns):
+        """
+        For all indexed fields, append to search_fields and set filter_fields.
+        :param model: The Django model class to inspect.
+        :param index_columns: A list of indexed column names.
+        """
         # Loop through all of the fields. If the field is indexed, add it
         # to the allowed filter columns. Additionally, if it is a text type,
         # add it to the searchable columns for the data browser.
-        for field in self.model._meta.get_fields():
+        for field in model._meta.get_fields():
             if field.name in index_columns:
                 field_type = field.get_internal_type()
                 if field_type in ("CharField", "TextField"):
@@ -149,8 +158,6 @@ class GenericViewSet(ReadOnlyModelViewSet):
                         "gte",
                         "range",
                     ]
-
-        self.search_fields = tuple(self.search_fields)
 
     def get_pagination_class(self):
         """
